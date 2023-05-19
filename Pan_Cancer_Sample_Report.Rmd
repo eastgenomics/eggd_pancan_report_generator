@@ -1,0 +1,65 @@
+---
+title: "Pan_Cancer_Sample_Report"
+output: 
+  html_document:
+    code_folding: hide
+    toc: true
+    toc_float: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+setwd("~/Documents/Projects/cancer/sample_report")
+```
+
+```{r}
+# load libraries
+library(DT)
+```
+
+
+## Sample Info
+
+```{r }
+
+```
+
+## QC
+
+GTEX v8 QC thresholds, remove any:
+
+* < 10 million mapped reads;
+* read mapping rate < 0.2;
+* intergenic mapping rate > 0.3;
+* base mismatch rate (mismatched bases divided by total aligned bases) > 0.01 for read mate 1 or > 0.02 for read mate 2;
+* rRNA mapping rate > 0.3.
+
+
+```{r}
+metrics <- read.csv("SeraSeqControl.star.bam.metrics.tsv", sep = "\t")
+datatable(metrics)
+```
+
+```{r coverage}
+rnaseqc_coverage <- read.csv("SeraSeqControl.star.bam.coverage.hgnc.tsv", sep = "\t")
+rnaseqc_coverage_hgnc <- rnaseqc_coverage[which(rnaseqc_coverage$hgnc_symbol != ""),]
+datatable(rnaseqc_coverage_hgnc, editable = TRUE)
+```
+
+
+## Fusions called
+
+
+```{r}
+fusion_abdriged <- read.csv("SeraSeqControl.FusionInspector.fusions.abridged.tsv.coding_effect", sep = "\t")
+#fusion_abdriged_filtered <- fusion_abdriged[, !(colnames(fusion_abdriged) %in% c("FUSION_MODEL", "FUSION_CDS", "FUSION_TRANSL", "PFAM_LEFT", "PFAM_RIGHT"))]
+fusion_abdriged <- fusion_abdriged[,c(1:30,34,35,31,32,33)]
+datatable(fusion_abdriged)
+```
+
+
+```{r}
+#htmltools::includeHTML("SeraSeqControl.fusion_inspector_web.html")
+
+```
+
