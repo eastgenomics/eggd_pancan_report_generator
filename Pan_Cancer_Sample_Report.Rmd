@@ -1,5 +1,7 @@
 ---
-title: "Pan_Cancer_Sample_Report"
+title: "Fusion Sample Report: SeraSeq"
+author: "Aisha, Jing Su"
+date: '`r format(Sys.time(), "Last modified: %d %b %Y")`'
 output: 
   html_document:
     code_folding: hide
@@ -8,58 +10,276 @@ output:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE ,warning = FALSE, message = FALSE)
 setwd("~/Documents/Projects/cancer/sample_report")
 ```
 
-```{r}
+```{r, warning=FALSE}
 # load libraries
 library(DT)
+library(chimeraviz)
+library(EnsDb.Hsapiens.v86)
+library(tidyr)
 ```
 
 
-## Sample Info
+## 1. Sample Info
 
-```{r }
+### 1.1 Sample Meta Data
 
-```
 
-## QC
+### 1.2 Sample QC
 
-GTEX v8 QC thresholds, remove any:
+GTEx v8 QC thresholds, not normals are any metrics where:
 
 * < 10 million mapped reads;
 * read mapping rate < 0.2;
 * intergenic mapping rate > 0.3;
-* base mismatch rate (mismatched bases divided by total aligned bases) > 0.01 for read mate 1 or > 0.02 for read mate 2;
 * rRNA mapping rate > 0.3.
 
 
 ```{r}
-metrics <- read.csv("SeraSeqControl.star.bam.metrics.tsv", sep = "\t")
-datatable(metrics)
+metrics <- read.csv("SeraSeqControl.star.bam.metrics.tsv", sep = "\t", header = F)
+colnames(metrics) <- c("QC_metric", "Value")
+metrics_filtered <- metrics[which(metrics$QC_metric %in% c("Mapping Rate", "Expression Profiling Efficiency", "Exonic Rate",
+                                                    "Read Length", "Genes Detected", "Median Exon CV", "Exon CV MAD",
+                                                    "Intronic Rate","Intergenic Rate","Intragenic Rate", "rRNA Rate",
+                                                    "Duplicate Reads", "Mapped Reads", "Mapped Unique Reads", "rRNA Reads", "Total Reads")), ]
+datatable(metrics_filtered)
 ```
+
+## 2. RNA Coverage 
+
+### 2.1 Coverage by Gene
+
 
 ```{r coverage}
 rnaseqc_coverage <- read.csv("SeraSeqControl.star.bam.coverage.hgnc.tsv", sep = "\t")
-rnaseqc_coverage_hgnc <- rnaseqc_coverage[which(rnaseqc_coverage$hgnc_symbol != ""),]
+# get the genes on the capture
+capture_genes <- read.csv("trusight_target_genes_ctat_v37_compatible.csv", header = F)
+rnaseqc_coverage_hgnc <- rnaseqc_coverage[which(rnaseqc_coverage$hgnc_symbol %in% capture_genes$V1),]
+max_cov <- as.numeric(rnaseqc_coverage_hgnc[order(rnaseqc_coverage_hgnc$coverage_mean, decreasing = T),][1,"coverage_mean"])
+max_gene <-  rnaseqc_coverage_hgnc[order(rnaseqc_coverage_hgnc$coverage_mean, decreasing = T),][1,"hgnc_symbol"]                 
+```
+
+
+For this sample, the maximum coverage for a gene is `r as.integer(max_cov)` for gene `r max_gene`
+```{r}
 datatable(rnaseqc_coverage_hgnc, editable = TRUE)
 ```
 
 
-## Fusions called
+### 2.2 Coverage by Exon
+
+```{r econ_coverage}
+rnaseqc_exons <- read.csv("SeraSeqControl.star.bam.exon_cv.tsv", sep = "\t")
+rnaseqc_exons <- separate(data = rnaseqc_exons, col = Exon.ID, into = c("Gene_ID", "Exon"), sep = "_")
+# get the genes on the capture
+rnaseqc_exonse_hgnc <- rnaseqc_exons[which(rnaseqc_exons$Gene_ID %in% rnaseqc_coverage_hgnc$ENSG_id),]
+rnaseqc_exonse_hgnc$hgnc_symbol <- rnaseqc_coverage_hgnc$hgnc_symbol[match(rnaseqc_exonse_hgnc$Gene_ID, rnaseqc_coverage_hgnc$ENSG_id)]
+rnaseqc_exonse_hgnc$hgnc_id<- rnaseqc_coverage_hgnc$hgnc_id[match(rnaseqc_exonse_hgnc$Gene_ID, rnaseqc_coverage_hgnc$ENSG_id)]
+rnaseqc_exonse_hgnc <- rnaseqc_exonse_hgnc[,c("hgnc_id", "hgnc_symbol", "Gene_ID", "Exon", "Exon.CV")]
+```
+
+```{r}
+datatable(rnaseqc_exonse_hgnc, editable = TRUE)
+```
+
+## 3. Fusion Prediction
+
+### 3.1 Fusion Prediction
 
 
 ```{r}
 fusion_abdriged <- read.csv("SeraSeqControl.FusionInspector.fusions.abridged.tsv.coding_effect", sep = "\t")
 #fusion_abdriged_filtered <- fusion_abdriged[, !(colnames(fusion_abdriged) %in% c("FUSION_MODEL", "FUSION_CDS", "FUSION_TRANSL", "PFAM_LEFT", "PFAM_RIGHT"))]
 fusion_abdriged <- fusion_abdriged[,c(1:30,34,35,31,32,33)]
+
+# 
 datatable(fusion_abdriged)
+
+
 ```
+### 3.2 Fusion Structures  {.tabset}
+#### FGFR3-BAIAP2L1
+
+![](Screenshot_FGFR_BA.png)
+
+
+#### FGFR3-TACC3
+
+![](Screenshot_FGFR.png)
+
+#### EML4-ALK
+
+![](Screenshot_EML4.png)
+
+#### TPM3--NTRK1
+
+![](Screenshot_TPM3.png)
+
+#### TFG-NTRK1
+
+![](Screenshot_TFG.png)
+
+#### EGFR-SEPTIN14
+
+![](Screenshot_EGFR.png)
+
+#### NCOA4-RET
+
+![](Screenshot_NCOA4.png)
+
+#### ETV6-NTRK3
+
+![](Screenshot_ETV6.png)
+
+#### KIF5B-RET
+
+![](Screenshot_KIF5B.png)
+
+#### SLC45A3-BRAF
+
+![](Screenshot_SLC45.png)
+
+#### PAX8-PPARG
+
+![](Screenshot_PAX8.png)
+
+#### TMPRSS2-ERG
+
+![](Screenshot_TMPRSS2.png)
+
+#### LMNA-NTRK1
+
+![](Screenshot_LMNA.png)
+
+#### CD74-ROS1
+
+![](Screenshot_CD74.png)
+
+
+#### CCDC6-RET
+
+![](Screenshot_CCDC6.png)
+
+#### SLC34A2-ROS1
+
+![](Screenshot_SLC34.png)
+
+#### COLA1-PDGFB
+
+![](Screenshot_COLA1.png)
+
+
+### 3.3 Fusion Plots
+
+
+```{r, warning=F,fig.width=10, fig.height=10}
+FI_fusion = import_starfusion("SeraSeqControl.FusionInspector.fusions.abridged.tsv.coding_effect", "hg38")
+plot_circle(FI_fusion)
+
+```
+
+
+```{r, out.width="80%",fig.width=10, fig.height=10}
+
+# get ensb ann
+edb <- EnsDb.Hsapiens.v86
+# get bam file
+fusion_reads <- "/home/aisha/Documents/Projects/cancer/sample_report/SeraSeqControl.star.bam"
+
+
+
+for (fusion_number in nrow(fusion_abdriged)){
+  fusion <- get_fusion_by_id(FI_fusion, fusion_number)
+  
+  plot_fusion(
+    fusion = fusion,
+    bamfile = fusion_reads,
+    edb = edb,
+    non_ucsc = TRUE)
+  
+  plot_fusion(
+    fusion = fusion,
+    bamfile = fusion_reads,
+    edb = edb,
+    non_ucsc = TRUE,
+    reduce_transcripts = TRUE)
+}
+
+fusion <- get_fusion_by_id(FI_fusion, fusion_number)
+fusion_alignment <- add_fusion_reads_alignment(fusion, fusion_reads)
+plot_fusion_reads(fusion_alignment)
+
+```
+
+```{r,fig.width=12, fig.height=8}
+####### EXAMPLE
+
+# First find the example data
+if(!exists("defuse833ke"))
+  defuse833ke <- system.file(
+    "extdata",
+    "defuse_833ke_results.filtered.tsv",
+    package = "chimeraviz")
+# Then load the fusion events
+fusions <- import_defuse(defuse833ke, "hg19", 1)
+get_fusion_by_gene_name(fusions, "RCC1")
+fusion <- get_fusion_by_id(fusions, 5267)
+# First find our example EnsDb file
+if(!exists("edbSqliteFile"))
+  edbSqliteFile <- system.file(
+    "extdata",
+    "Homo_sapiens.GRCh37.74.sqlite",
+    package="chimeraviz")
+# Then load it
+edb <- ensembldb::EnsDb(edbSqliteFile)
+if(!exists("fusion5267and11759reads"))
+  fusion5267and11759reads <- system.file(
+    "extdata",
+    "fusion5267and11759reads.bam",
+    package = "chimeraviz")
+plot_fusion(
+ fusion = fusion,
+ bamfile = fusion5267and11759reads,
+ edb = edb,
+ non_ucsc = TRUE)
+```
+
+```{r,fig.width=12, fig.height=8}
+FI_fusion = import_starfusion("SeraSeqControl.FusionInspector.fusions.abridged.tsv.coding_effect", "hg38")
+# get bam file
+sample_bam <- "/home/aisha/Documents/Projects/cancer/sample_report/SeraSeqControl.star.bam"
+# bam has chr, so gtf needs to be chr too
+
+edb <- ensembldb::EnsDb("Homo_sapiens.GRCh38.109.sqlite" )
+fusion <- get_fusion_by_id(FI_fusion, 1)
+
+
+plot_fusion(
+ fusion = fusion,
+ bamfile = sample_bam,
+ edb = edb,
+ non_ucsc = T)
+```
+
+
 
 
 ```{r}
-#htmltools::includeHTML("SeraSeqControl.fusion_inspector_web.html")
+plot_fusion_transcript(
+  fusion,
+  edb)
 
 ```
 
+
+
+## 4. Session Info
+
+```{r 4_session_info, include = TRUE}
+
+sessionInfo()
+
+```
