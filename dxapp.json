@@ -54,12 +54,12 @@
       "class": "file",
       "optional": false,
       "patterns": [
-        "*.bed"
+        "*.csv"
       ],
       "help": ""
     },
     {
-      "name": "ensdb_gtf",
+      "name": "ensdb_sqlite",
       "class": "file",
       "optional": false,
       "patterns": [
@@ -73,6 +73,15 @@
       "optional": false,
       "patterns": [
         "*.tar.gz"
+      ],
+      "help": ""
+    },
+    {
+      "name": "rmarkdown",
+      "class": "file",
+      "optional": false,
+      "patterns": [
+        "*.Rmd"
       ],
       "help": ""
     }
@@ -93,6 +102,14 @@
         "hours": 2
       }
     },
+    "assetDepends": [
+      {
+        "name": "htslib",
+        "project": "project-Fkb6Gkj433GVVvj73J7x8KbV",
+        "folder": "/app_assets/htslib/htslib_v1.15.0",
+        "version": "1.15.0"
+      }
+    ],
     "interpreter": "bash",
     "file": "src/eggd_pancan_report_generator.sh",
     "distribution": "Ubuntu",
