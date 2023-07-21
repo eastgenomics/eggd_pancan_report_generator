@@ -16,19 +16,8 @@ main() {
     sudo dpkg -i libncurses5_6.2-0ubuntu2_amd64.deb
 
     samtools view -H $bam_name \
-        | sed -e 's/chr1/1/' | sed -e 's/chr2/2/' \
-        | sed -e 's/chr3/3/' | sed -e 's/chr4/4/' \
-        | sed -e 's/chr5/5/' | sed -e 's/chr6/6/' \
-        | sed -e 's/chr7/7/' | sed -e 's/chr8/8/' \
-        | sed -e 's/chr9/9/' | sed -e 's/chr10/10/' \
-        | sed -e 's/chr11/11/' | sed -e 's/chr12/12/' \
-        | sed -e 's/chr13/13/' | sed -e 's/chr14/14/' \
-        | sed -e 's/chr15/15/' | sed -e 's/chr16/16/' \
-        | sed -e 's/chr17/17/' | sed -e 's/chr18/18/' \
-        | sed -e 's/chr19/19/' | sed -e 's/chr20/20/' \
-        | sed -e 's/chr21/21/' | sed -e 's/chr22/22/' \
-        | sed -e 's/chrX/X/' | sed -e 's/chrY/Y/' \
-        | sed -e 's/chrM/M/' | samtools reheader - $bam_name > ${bam_prefix}.nochr.bam
+        | sed  -e 's/SN:\([0-9XY]*\)/SN:chr\1/' -e 's/SN:MT/SN:chrM/' \
+        | samtools reheader - $bam_name > ${bam_prefix}.nochr.bam
 
     samtools index -b ${bam_prefix}.nochr.bam
 
