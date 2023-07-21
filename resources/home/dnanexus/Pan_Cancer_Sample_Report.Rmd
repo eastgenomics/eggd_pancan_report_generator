@@ -273,20 +273,25 @@ plot_circle(FI_fusion)
 
 ```{r chimeraviz_plot_generation}
 
+# get bam file
+#fusion_reads <- "/home/aisha/Documents/Projects/cancer/sample_report/MB2002.star.bam"
+#edb <- ensembldb::EnsDb("Homo_sapiens.GRCh38.103.sqlite" )
+
+
+#for (fusion_number in 1:nrow(fusion_abdriged)){
+#  fusion <- get_fusion_by_id(FI_fusion, fusion_number)
+#  print(fusion_abdriged[fusion_number,1])
+#  plot_fusion(
+#    fusion = fusion,
+#    bamfile = NULL,
+#    edb = edb,
+#    non_ucsc = T,
+#    reduce_transcripts= F)
+#  plot_fusion_transcript(
+#    fusion,
+#    edb)
+#}
 ```
-
-
-![EWSR1--FLI1](/home/aisha/Documents/Projects/cancer/sample_report/fusion__1__fusion_plot.png)
-
-![EWSR1--FLI1](/home/aisha/Documents/Projects/cancer/sample_report/fusion__1__fusion_transcript_plot.png)
-
-
-
-![COL3A1--COL1A2](/home/aisha/Documents/Projects/cancer/sample_report/fusion__2__fusion_plot.png)
-
-![COL3A1--COL1A2](/home/aisha/Documents/Projects/cancer/sample_report/fusion__2__fusion_transcript_plot.png)
-
-![PAX8--PPARG](/home/aisha/Documents/Projects/cancer/sample_report/fusion__3__fusion_plot.png)
 
 ## 4. Session Info
 
