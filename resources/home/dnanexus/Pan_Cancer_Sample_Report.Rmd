@@ -140,6 +140,83 @@ datatable(fusion_abdriged)
 
 ```
 
+
+### 3.2 Exon breakpoint annotation
+
+
+```{r Exons table}
+fusion_abdriged <- read.csv(params$fusionsabridgedcoding, sep = "\t")
+fusion_abdriged <- fusion_abdriged[,c(1:30,34,35,31,32,33)]
+
+ref_annot <- read.delim("ref_annot.gtf", sep = "\t", skip = 5, header = F)
+colnames(ref_annot) <- c("chr", "source", "feature", "start", "end", "score", "strand", "frame", "attribute")
+# filter the reference annotation file to ensembl source and exons only
+ref_annot_exons <- ref_annot[which(ref_annot$feature == "exon"), ]
+
+# get the genes names to filter the ref annotation to genes of interest
+genes <- unlist(strsplit(fusion_abdriged$X.FusionName, "--"))
+ref_annot_df <- as.data.frame(matrix(NA, ncol = ncol(ref_annot_exons), nrow = 0))
+colnames(ref_annot_df) <- colnames(ref_annot_exons)
+
+for(g in genes){
+  ref_annot_exons_filtered <- ref_annot_exons[grep(paste(g,";", sep=""), ref_annot_exons$attribute, fixed = T) , ]
+  ref_annot_df <- rbind(ref_annot_df, ref_annot_exons_filtered)
+}
+
+# ensemble attribute
+transcript_attributes <- c("gene_id", "transcript_id", "gene_type", "gene_name",
+                           "transcript_type", "transcript_name", "exon_number", "exon_id",
+                           "level", "protein_id", "transcript_support_level",
+                           "hgnc_id")
+# c("gene_id", "transcript_id", "gene_type", "gene_name",
+#                           "transcript_type", "transcript_name", "exon_number", "exon_id",
+#                           "level", "protein_id"
+#                           "hgnc_id", "tag","tag", "tag", "havana_gene", "havana_transcript")
+ref_annot_df <- separate(data = ref_annot_df, col = attribute, into = transcript_attributes,  sep = "; ")
+for(header in transcript_attributes){
+  ref_annot_df[,header] <- sub(".*? ", "",ref_annot_df[,header])
+}
+
+
+# create a dataframe that contains the exon that overlaps the breakpoint
+df_breakpoints <- fusion_abdriged[,c("X.FusionName", "LeftGene", "RightGene", "LeftBreakpoint","RightBreakpoint")]
+tmp <- gsub("\\..*", "", df_breakpoints$LeftGene) # removes version
+df_breakpoints$LeftGene <- gsub(".*\\^", "", tmp) # remove gene symbol
+tmp <- gsub("\\..*", "", df_breakpoints$RightGene) # removes version
+df_breakpoints$RightGene <- gsub(".*\\^", "", tmp) # remove gene symbol
+df_breakpoints <- separate(data = df_breakpoints, col = X.FusionName, into = c("LeftGene","RightGene"),  sep = "--")
+
+df_fusion_annot <- as.data.frame(matrix(nrow=length(genes), ncol = 0))
+df_fusion_annot$gene_name <- as.character(rbind(df_breakpoints$LeftGene, df_breakpoints$RightGene))
+df_fusion_annot$genebreakpoints <- as.character(rbind(df_breakpoints$LeftBreakpoint, df_breakpoints$RightBreakpoint))
+## get location
+location <-sub('^([^:]+:[^:]+).*', '\\1', df_fusion_annot$genebreakpoints)
+df_fusion_annot$chr <- gsub(":.*", "", location)
+df_fusion_annot$pos <- gsub(".*:", "", location)
+df_fusion_annot$pos <- as.integer(df_fusion_annot$pos)
+
+tmp <- as.data.frame(matrix(nrow=0, ncol = ncol(ref_annot_df)))
+colnames(tmp) <- colnames(ref_annot_df)
+for(r in 1:nrow(df_fusion_annot)){
+  dat  <- ref_annot_df[which(ref_annot_df$chr == df_fusion_annot[r,"chr"] & ref_annot_df$end >= df_fusion_annot[r,"pos"] & ref_annot_df$start <=  df_fusion_annot[r,"pos"]),]
+  tmp <- rbind(dat,tmp)
+}
+
+tmp <- tmp[,c("source","chr", "start", "end", "strand", "gene_id", "transcript_id", 
+              "gene_name", "hgnc_id", "transcript_name", "exon_number", "exon_id",
+              "protein_id", "transcript_support_level")]
+
+
+df_fusion_annot <- df_fusion_annot[,!(names(df_fusion_annot) %in% c("chr", "pos"))]
+df2 <- df_fusion_annot %>% left_join( tmp, 
+           by=c('gene_name'))
+
+
+df2$MANE_Status <- mane$MANE_status[match(df2$transcript_id, mane$Ensembl_nuc)]
+
+datatable(df2)
+```
+
 ### 3.3 Fusion Plots
 
 
