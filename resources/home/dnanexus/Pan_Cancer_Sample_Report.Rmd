@@ -30,6 +30,7 @@ knitr::opts_chunk$set(echo = TRUE ,warning = FALSE, message = FALSE)
 library(DT)
 library(chimeraviz)
 library(tidyr)
+library("readxl")
 ```
 
 
@@ -216,6 +217,14 @@ df2$MANE_Status <- mane$MANE_status[match(df2$transcript_id, mane$Ensembl_nuc)]
 
 datatable(df2)
 ```
+
+```{r chimerkb}
+chimerkb <- read_excel("ChimerKB4.xlsx")
+gene_nice <- gsub("--", "-", fusion_abdriged_annotation[,1])
+chimerkb_sample_fusions <- chimerkb[which(chimerkb$Fusion_pair %in% gene_nice),]
+datatable(chimerkb_sample_fusions)
+```
+
 
 ### 3.3 Fusion Plots
 
