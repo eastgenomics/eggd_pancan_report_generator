@@ -225,6 +225,41 @@ chimerkb_sample_fusions <- chimerkb[which(chimerkb$Fusion_pair %in% gene_nice),]
 datatable(chimerkb_sample_fusions)
 ```
 
+```{r url_links}
+fusion_abdriged_annotation$gene_fusion1 <- genes[seq_along(genes) %% 2 > 0]
+fusion_abdriged_annotation$gene_fusion2 <- genes[seq_along(genes) %% 2 == 0]
+
+
+make_hyperlink = function(myurl,mytext=myurl) {
+  paste('<a href="',myurl,'">',mytext,'</a>')
+}
+
+
+fusion_abdriged_annotation$gene_fusion_cosmic <- ""
+fusion_abdriged_annotation[1, "gene_fusion_cosmic"] <- "https://cancer.sanger.ac.uk/cosmic/fusion/overview?fid=322436&gid=368386"
+fusion_abdriged_annotation[3, "gene_fusion_cosmic"] <- "https://cancer.sanger.ac.uk/cosmic/fusion/overview?fid=394618&gid=249070"
+
+
+fusion_abdriged_annotation$gene_fusion1_oncokb <- c(paste("https://www.oncokb.org/gene/", fusion_abdriged_annotation$gene_fusion1, "/Fusions?refGenome=GRCh38" , sep = ""))
+fusion_abdriged_annotation$gene_fusion2_oncokb <- c(paste("https://www.oncokb.org/gene/", fusion_abdriged_annotation$gene_fusion2, "/Fusions?refGenome=GRCh38" , sep = ""))
+
+fusion_abdriged_annotation$gene_fusion1_CT <- c(paste("https://clinicaltrials.gov/search?term=", fusion_abdriged_annotation$gene_fusion1, "%20Fusion" , sep = ""))
+fusion_abdriged_annotation$gene_fusion2_CT <- c(paste("https://clinicaltrials.gov/search?term=", fusion_abdriged_annotation$gene_fusion2, "%20Fusion" , sep = ""))
+
+
+fusion_abdriged_annotation_final <-  fusion_abdriged_annotation %>%
+gt() %>%
+  fmt (
+    columns = c('gene_fusion_cosmic',
+                'gene_fusion1_oncokb','gene_fusion2_oncokb',
+                'gene_fusion1_CT','gene_fusion2_CT'),
+    fns = make_hyperlink
+  )
+
+fusion_abdriged_annotation_final
+
+```
+
 
 ### 3.3 Fusion Plots
 
