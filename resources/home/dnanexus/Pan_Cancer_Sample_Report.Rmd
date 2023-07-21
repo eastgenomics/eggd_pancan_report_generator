@@ -1,0 +1,152 @@
+---
+title: '`r paste("Fusion Sample Report", params$samplename)`'
+author: "EGLH Cancer Team"
+date: '`r format(Sys.time(), "Last modified: %d %b %Y")`'
+params: 
+  qcmetrics:
+  qcgenecov: 
+  capturegenes:
+  qcexonscov:
+  fusionsabridgedcoding:
+  ensbsqlite:
+  bam:
+  samplename:
+  sexphenotype:
+  targetlist:
+output: 
+  html_document:
+    code_folding: hide
+    toc: true
+    toc_float: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE ,warning = FALSE, message = FALSE)
+#setwd("~")
+```
+
+```{r, warning=FALSE}
+# load libraries
+library(DT)
+library(chimeraviz)
+library(tidyr)
+```
+
+
+## 1. Sample Info
+
+### 1.1 Sample Meta Data
+
+Sample ID: `r params$samplename`
+Gender: `r params$sexphenotype`
+Age: NA
+Tumour Type: NA
+Target list: `r params$targetlist`
+
+### 1.2 Sample QC
+
+GTEx v8 QC thresholds, not normals are any metrics where:
+
+* < 10 million mapped reads;
+* read mapping rate < 0.2;
+* intergenic mapping rate > 0.3;
+* rRNA mapping rate > 0.3.
+
+
+```{r}
+metrics <- read.csv(params$qcmetrics, sep = "\t", header = F)
+colnames(metrics) <- c("QC_metric", "Value")
+metrics_filtered <- metrics[which(metrics$QC_metric %in% c("Mapping Rate", "Expression Profiling Efficiency", "Exonic Rate",
+                                                    "Read Length", "Genes Detected", "Median Exon CV", "Exon CV MAD",
+                                                    "Intronic Rate","Intergenic Rate","Intragenic Rate", "rRNA Rate",
+                                                    "Duplicate Reads", "Mapped Reads", "Mapped Unique Reads", "rRNA Reads", "Total Reads")), ]
+datatable(metrics_filtered)
+```
+
+## 2. RNA Coverage 
+
+### 2.1 Coverage by Gene
+
+
+```{r coverage}
+rnaseqc_coverage <- read.csv(params$qcgenecov, sep = "\t")
+# get the genes on the capture
+capture_genes <- read.csv(params$capturegenes, header = F)
+rnaseqc_coverage_hgnc <- rnaseqc_coverage[which(rnaseqc_coverage$hgnc_symbol %in% capture_genes$V1),]
+max_cov <- as.numeric(rnaseqc_coverage_hgnc[order(rnaseqc_coverage_hgnc$coverage_mean, decreasing = T),][1,"coverage_mean"])
+max_gene <-  rnaseqc_coverage_hgnc[order(rnaseqc_coverage_hgnc$coverage_mean, decreasing = T),][1,"hgnc_symbol"]                 
+```
+
+
+For this sample, the maximum coverage for a gene is `r as.integer(max_cov)` for gene `r max_gene`
+```{r}
+datatable(rnaseqc_coverage_hgnc, editable = TRUE)
+```
+
+
+### 2.2 Coverage by Exon
+
+```{r econ_coverage}
+rnaseqc_exons <- read.csv(params$qcexonscov, sep = "\t")
+rnaseqc_exons <- separate(data = rnaseqc_exons, col = Exon.ID, into = c("Gene_ID", "Exon"), sep = "_")
+# get the genes on the capture
+rnaseqc_exonse_hgnc <- rnaseqc_exons[which(rnaseqc_exons$Gene_ID %in% rnaseqc_coverage_hgnc$ENSG_id),]
+rnaseqc_exonse_hgnc$hgnc_symbol <- rnaseqc_coverage_hgnc$hgnc_symbol[match(rnaseqc_exonse_hgnc$Gene_ID, rnaseqc_coverage_hgnc$ENSG_id)]
+rnaseqc_exonse_hgnc$hgnc_id<- rnaseqc_coverage_hgnc$hgnc_id[match(rnaseqc_exonse_hgnc$Gene_ID, rnaseqc_coverage_hgnc$ENSG_id)]
+rnaseqc_exonse_hgnc <- rnaseqc_exonse_hgnc[,c("hgnc_id", "hgnc_symbol", "Gene_ID", "Exon", "Exon.CV")]
+```
+
+```{r}
+datatable(rnaseqc_exonse_hgnc, editable = TRUE)
+```
+
+## 3. Fusion Prediction
+
+### 3.1 Fusion Prediction
+
+
+```{r}
+fusion_abdriged <- read.csv(params$fusionsabridgedcoding, sep = "\t")
+#fusion_abdriged_filtered <- fusion_abdriged[, !(colnames(fusion_abdriged) %in% c("FUSION_MODEL", "FUSION_CDS", "FUSION_TRANSL", "PFAM_LEFT", "PFAM_RIGHT"))]
+fusion_abdriged <- fusion_abdriged[,c(1:30,34,35,31,32,33)]
+
+# 
+datatable(fusion_abdriged)
+
+
+```
+
+### 3.3 Fusion Plots
+
+
+```{r, warning=F,fig.width=10, fig.height=10}
+FI_fusion = import_starfusion(params$fusionsabridgedcoding, "hg38")
+plot_circle(FI_fusion)
+
+```
+
+
+```{r chimeraviz_plot_generation}
+
+```
+
+
+![EWSR1--FLI1](/home/aisha/Documents/Projects/cancer/sample_report/fusion__1__fusion_plot.png)
+
+![EWSR1--FLI1](/home/aisha/Documents/Projects/cancer/sample_report/fusion__1__fusion_transcript_plot.png)
+
+
+
+![COL3A1--COL1A2](/home/aisha/Documents/Projects/cancer/sample_report/fusion__2__fusion_plot.png)
+
+![COL3A1--COL1A2](/home/aisha/Documents/Projects/cancer/sample_report/fusion__2__fusion_transcript_plot.png)
+
+![PAX8--PPARG](/home/aisha/Documents/Projects/cancer/sample_report/fusion__3__fusion_plot.png)
+
+## 4. Session Info
+
+```{r 4_session_info, include = TRUE}
+
+sessionInfo()
+
+```
