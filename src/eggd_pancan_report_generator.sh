@@ -36,7 +36,7 @@ main() {
     # Get image id from docker image loaded
     CHI_IMAGE_ID=$(sudo docker images --format="{{.Repository}} {{.ID}}" | grep "^sample_report" | cut -d' ' -f2)
 
-    # get" the Rscript with the paths in
+    # get the Rscript with the paths in
     echo "Rscript -e \"rmarkdown::render('${rmarkdown_name}', \
     params = list(qcmetrics = '$rnaseqc_metrics_name', \
     qcgenecov = '$rnaseqc_coverage_name', \
