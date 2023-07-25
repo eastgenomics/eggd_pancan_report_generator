@@ -25,7 +25,6 @@ output:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE ,warning = FALSE, message = FALSE)
-#setwd("~")
 ```
 
 ```{r, warning=FALSE}
@@ -139,10 +138,7 @@ datatable(rnaseqc_exonse_hgnc, editable = TRUE)
 
 ```{r}
 fusion_abdriged <- read.csv(params$fusionsabridgedcoding, sep = "\t")
-#fusion_abdriged_filtered <- fusion_abdriged[, !(colnames(fusion_abdriged) %in% c("FUSION_MODEL", "FUSION_CDS", "FUSION_TRANSL", "PFAM_LEFT", "PFAM_RIGHT"))]
 fusion_abdriged <- fusion_abdriged[,c(1:30,34,35,31,32,33)]
-
-# 
 datatable(fusion_abdriged)
 
 
@@ -172,15 +168,12 @@ for(g in genes){
   ref_annot_df <- rbind(ref_annot_df, ref_annot_exons_filtered)
 }
 
-# ensemble attribute
+# ensembl attribute
 transcript_attributes <- c("gene_id", "transcript_id", "gene_type", "gene_name",
                            "transcript_type", "transcript_name", "exon_number", "exon_id",
                            "level", "protein_id", "transcript_support_level",
                            "hgnc_id")
-# c("gene_id", "transcript_id", "gene_type", "gene_name",
-#                           "transcript_type", "transcript_name", "exon_number", "exon_id",
-#                           "level", "protein_id"
-#                           "hgnc_id", "tag","tag", "tag", "havana_gene", "havana_transcript")
+
 ref_annot_df <- separate(data = ref_annot_df, col = attribute, into = transcript_attributes,  sep = "; ")
 for(header in transcript_attributes){
   ref_annot_df[,header] <- sub(".*? ", "",ref_annot_df[,header])
@@ -230,7 +223,6 @@ datatable(df2)
 
 ```{r}
 fusion_abdriged_annotation <- read.csv(params$fusionsabridgedcoding, sep = "\t")
-#fusion_abdriged_filtered <- fusion_abdriged[, !(colnames(fusion_abdriged) %in% c("FUSION_MODEL", "FUSION_CDS", "FUSION_TRANSL", "PFAM_LEFT", "PFAM_RIGHT"))]
 fusion_abdriged_annotation <- fusion_abdriged_annotation[,c(1:5)]
 genes <- unlist(strsplit(fusion_abdriged_annotation[,1], "--"))
 ```
