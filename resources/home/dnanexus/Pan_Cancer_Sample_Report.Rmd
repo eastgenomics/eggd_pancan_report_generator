@@ -13,6 +13,9 @@ params:
   samplename:
   sexphenotype:
   targetlist:
+  ref_annot:
+  mane:
+  chimerkb:
 output:
   html_document:
     code_folding: hide
@@ -30,7 +33,11 @@ knitr::opts_chunk$set(echo = TRUE ,warning = FALSE, message = FALSE)
 library(DT)
 library(chimeraviz)
 library(tidyr)
+install.packages("readxl")
 library("readxl")
+library(dplyr)
+install.packages("gt")
+library(gt)
 ```
 
 
@@ -146,10 +153,11 @@ datatable(fusion_abdriged)
 
 
 ```{r Exons table}
+mane <- read.csv(params$mane, sep = "\t")
 fusion_abdriged <- read.csv(params$fusionsabridgedcoding, sep = "\t")
 fusion_abdriged <- fusion_abdriged[,c(1:30,34,35,31,32,33)]
 
-ref_annot <- read.delim("ref_annot.gtf", sep = "\t", skip = 5, header = F)
+ref_annot <- read.delim(params$ref_annot, sep = "\t", skip = 5, header = F)
 colnames(ref_annot) <- c("chr", "source", "feature", "start", "end", "score", "strand", "frame", "attribute")
 # filter the reference annotation file to ensembl source and exons only
 ref_annot_exons <- ref_annot[which(ref_annot$feature == "exon"), ]
@@ -218,8 +226,17 @@ df2$MANE_Status <- mane$MANE_status[match(df2$transcript_id, mane$Ensembl_nuc)]
 datatable(df2)
 ```
 
+### 3.2 Fusion Prediction Annotation
+
+```{r}
+fusion_abdriged_annotation <- read.csv(params$fusionsabridgedcoding, sep = "\t")
+#fusion_abdriged_filtered <- fusion_abdriged[, !(colnames(fusion_abdriged) %in% c("FUSION_MODEL", "FUSION_CDS", "FUSION_TRANSL", "PFAM_LEFT", "PFAM_RIGHT"))]
+fusion_abdriged_annotation <- fusion_abdriged_annotation[,c(1:5)]
+genes <- unlist(strsplit(fusion_abdriged_annotation[,1], "--"))
+```
+
 ```{r chimerkb}
-chimerkb <- read_excel("ChimerKB4.xlsx")
+chimerkb <- read_excel(params$chimerkb)
 gene_nice <- gsub("--", "-", fusion_abdriged_annotation[,1])
 chimerkb_sample_fusions <- chimerkb[which(chimerkb$Fusion_pair %in% gene_nice),]
 datatable(chimerkb_sample_fusions)
@@ -248,8 +265,8 @@ fusion_abdriged_annotation$gene_fusion2_CT <- c(paste("https://clinicaltrials.go
 
 
 fusion_abdriged_annotation_final <-  fusion_abdriged_annotation %>%
-gt() %>%
-  fmt (
+  gt() %>%
+  fmt(
     columns = c('gene_fusion_cosmic',
                 'gene_fusion1_oncokb','gene_fusion2_oncokb',
                 'gene_fusion1_CT','gene_fusion2_CT'),
