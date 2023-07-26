@@ -28,7 +28,7 @@ main() {
     | sed -e 's/chr19/19/' | sed -e 's/chr20/20/' \
     | sed -e 's/chr21/21/' | sed -e 's/chr22/22/' \
     | sed -e 's/chrX/X/' | sed -e 's/chrY/Y/' \
-    | sed -e 's/chrM/M/' | samtools reheader - $bam_name > ${bam_prefix}.nochr.b
+    | sed -e 's/chrM/M/' | samtools reheader - $bam_name > ${bam_prefix}.nochr.bam
 
     samtools index -b ${bam_prefix}.nochr.bam
 
