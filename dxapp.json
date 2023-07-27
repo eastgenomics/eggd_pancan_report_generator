@@ -84,6 +84,33 @@
         "*.Rmd"
       ],
       "help": ""
+    },
+    {
+      "name": "ref_annot",
+      "class": "file",
+      "optional": false,
+      "patterns": [
+        "*.gtf"
+      ],
+      "help": ""
+    },
+    {
+      "name": "MANE",
+      "class": "file",
+      "optional": false,
+      "patterns": [
+        "*.txt"
+      ],
+      "help": ""
+    },
+    {
+      "name": "chimerKB4_name",
+      "class": "file",
+      "optional": false,
+      "patterns": [
+        "*.xlsx"
+      ],
+      "help": ""
     }
   ],
   "outputSpec": [
