@@ -102,7 +102,7 @@ for (i in 1:nrow(metric_threshold_df)){
 }
 
 metrics_filtered <- metrics_filtered[order(metrics_filtered$Status),]
-datatable(metrics_filtered)
+datatable(metrics_filtered, rownames = F, rownames = F)
 ```
 
 ## 2. RNA Coverage 
@@ -149,7 +149,7 @@ ggplot(rnaseqc_coverage_hgnc, aes(rnaseqc_coverage_hgnc$coverage_mean)) +
 
 
 ```{r}
-datatable(rnaseqc_coverage_hgnc, editable = TRUE)
+datatable(rnaseqc_coverage_hgnc, editable = TRUE, rownames = F)
 ```
 
 
@@ -166,7 +166,7 @@ rnaseqc_exonse_hgnc <- rnaseqc_exonse_hgnc[,c("hgnc_id", "hgnc_symbol", "Gene_ID
 ```
 
 ```{r}
-datatable(rnaseqc_exonse_hgnc, editable = TRUE)
+datatable(rnaseqc_exonse_hgnc, editable = TRUE, rownames = F)
 ```
 
 ## 3. Fusion Prediction
@@ -204,7 +204,7 @@ datatable(rnaseqc_exonse_hgnc, editable = TRUE)
 fusion_abdriged <- read.csv(params$fusionsabridgedcoding, sep = "\t")
 fusion_abdriged$X.FusionName <- gsub("--", "::",fusion_abdriged$X.FusionName)
 fusion_abdriged <- fusion_abdriged[,c(1:30,34,35,31,32,33)]
-datatable(fusion_abdriged)
+datatable(fusion_abdriged, rownames = F)
 
 
 ```
@@ -281,7 +281,7 @@ df2 <- df_fusion_annot %>% left_join( tmp,
 
 df2$MANE_Status <- mane$MANE_status[match(df2$transcript_id, mane$Ensembl_nuc)]
 
-datatable(df2)
+datatable(df2, rownames = F)
 ```
 
 ### 3.2 Fusion Prediction Annotation
@@ -296,7 +296,7 @@ genes <- unlist(strsplit(fusion_abdriged_annotation[,1], "--"))
 chimerkb <- read_excel(params$chimerkb)
 gene_nice <- gsub("--", "-", fusion_abdriged_annotation[,1])
 chimerkb_sample_fusions <- chimerkb[which(chimerkb$Fusion_pair %in% gene_nice),]
-datatable(chimerkb_sample_fusions)
+datatable(chimerkb_sample_fusions, rownames = F)
 ```
 
 ```{r url_links}
