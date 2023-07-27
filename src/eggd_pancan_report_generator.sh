@@ -50,7 +50,7 @@ main() {
     targetlist = 'NA', \
     ref_annot = '$ref_annot_name', \
     mane = '$MANE_name', \
-    chimerkb='$chimerKB4_name'))\"" > cmd.sh
+    chimerkb='$chimerkb_name'))\"" > cmd.sh
 
 
     docker run -v /home/dnanexus:/home/software $CHI_IMAGE_ID /bin/bash -c 'bash cmd.sh'

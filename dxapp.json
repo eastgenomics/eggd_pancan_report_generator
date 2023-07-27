@@ -104,7 +104,7 @@
       "help": ""
     },
     {
-      "name": "chimerKB4_name",
+      "name": "chimerkb",
       "class": "file",
       "optional": false,
       "patterns": [
