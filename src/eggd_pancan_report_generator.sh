@@ -16,8 +16,7 @@ main() {
     sudo dpkg -i libncurses5_6.2-0ubuntu2_amd64.deb
 
     samtools view -H $bam_name \
-    sed -e '
-        s/chr1/1/g; s/chr2/2/
+    sed -e 's/chr1/1/g; s/chr2/2/
         s/chr3/3/g; s/chr4/4/
         s/chr5/5/g; s/chr6/6/
         s/chr7/7/g; s/chr8/8/
@@ -29,7 +28,7 @@ main() {
         s/chr19/19/g; s/chr20/20/
         s/chr21/21/g; s/chr22/22/
         s/chrX/X/g; s/chrY/Y/
-        s/chrM/M/' \ | samtools reheader - $bam_name > ${bam_prefix}.nochr.bam
+        s/chrM/M/' | samtools reheader - $bam_name > ${bam_prefix}.nochr.bam
 
     samtools index -b ${bam_prefix}.nochr.bam
 
