@@ -42,6 +42,11 @@ library(gt)
 
 ## 1. Sample Info
 
+```{r}
+fusion_abdriged <- read.csv("MB2002.FusionInspector.fusions.abridged.tsv.coding_effect", sep = "\t")
+fusion_abdriged$X.FusionName <- gsub("--", "::",fusion_abdriged$X.FusionName)
+```
+
 ### 1.1 Sample Meta Data
 
 Sample ID: `r params$samplename`
@@ -49,6 +54,7 @@ Gender: `r params$sexphenotype`
 Age: NA
 Tumour Type: NA
 Target list: `r params$targetlist`
+Found fusions: `r fusion_abdriged$X.FusionName`
 
 ### 1.2 Sample QC
 
