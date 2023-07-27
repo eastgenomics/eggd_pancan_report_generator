@@ -175,30 +175,30 @@ datatable(rnaseqc_exonse_hgnc, editable = TRUE)
 
 #### Columm names defintions
 
-    FusionName: name of the fusion as geneA--geneB
-    JunctionReadCount: number of split RNA-Seq reads that map and define the fusion breakpoint. 
-    SpanningFragCount: number of paired-end reads that span the fusion breakpoint but the reads do not directly overlap the breakpoint.
-    LeftGene: identifier of the gene represented by the left section of the fusion transcript.
-    LeftLocalBreakpoint: position of the left fusion breakpoint in the context of the FusionInspector mini-fusion-gene contig.
-    LeftBreakpoint: position of the left fusion breakpoint in the context of the genome.
-    RightGene:  identifier of the gene represented by the right section of the fusion transcript.
-    RightLocalBreakpoint: position of the right fusion breakpoint in the context of the FusionInspector min-fusion-gene contig.
-    RightBreakpoint: position of the right fusion breakpoint in the context of the genome.
+    FusionName: name of the fusion as geneA--geneB  
+    JunctionReadCount: number of split RNA-Seq reads that map and define the fusion breakpoint.  
+    SpanningFragCount: number of paired-end reads that span the fusion breakpoint but the reads do not directly overlap the breakpoint.  
+    LeftGene: identifier of the gene represented by the left section of the fusion transcript.  
+    LeftLocalBreakpoint: position of the left fusion breakpoint in the context of the FusionInspector mini-fusion-gene contig.  
+    LeftBreakpoint: position of the left fusion breakpoint in the context of the genome.  
+    RightGene:  identifier of the gene represented by the right section of the fusion transcript.  
+    RightLocalBreakpoint: position of the right fusion breakpoint in the context of the FusionInspector min-fusion-gene contig.  
+    RightBreakpoint: position of the right fusion breakpoint in the context of the genome.  
     SpliceType: category of support at the fusion breakpoint: {
                 ONLY_REF_SPLICE: fusion breakpoint occurs at reference (known) splice junctions.
                 INCL_NON_REF_SPLICE: fusion breakpoint occurs at a breakpoint that does not involve all reference (known) exon junctions.
                 NO_JUNCTION_READS_IDENTIFIED: only spanning fragments support the fusion. (can only happen if --min_junction_reads is set to zero).
-           }
-    LargeAnchorSupport:  YES|NO, indicates whether there are at least 25 aligned bases on each side of the fusion breakpoint.
-    NumCounterFusionLeft:  Number of RNA-Seq fragments supporting the alternative non-fused allele at the left junction breakpoint. 
-    NumCounterFusionRight:  Number of RNA-Seq fragments supporting the alternative non-fused allele at the right junction breakpoint.
-    FAR_left:  Left fusion allelic ratio (see figure below)
-    FAR_right:  Right fusion allelic ratio  (see figure below)
-    LeftBreakDinuc: the genomic dinucleotides found at the left breakpoint (putative splice site if splicing is involved).
-    LeftBreakEntropy: entropy calculation for the 15 bases immediately upstream from the fusion junction.
-    RightBreakDinuc:  the genomic dinucleotides found at the right breakpoint (putative splice site if splicing is involved).
-    RightBreakEntropy: entropy calculation for the 15 bases immediately downstream from the fusion junction.
-    FFPM: normalized measure of the quantity of RNA-Seq fragments supporting the fusion event as:  fusion fragments per total million RNA-Seq fragments.
+           }  
+    LargeAnchorSupport:  YES|NO, indicates whether there are at least 25 aligned bases on each side of the fusion breakpoint.  
+    NumCounterFusionLeft:  Number of RNA-Seq fragments supporting the alternative non-fused allele at the left junction breakpoint.   
+    NumCounterFusionRight:  Number of RNA-Seq fragments supporting the alternative non-fused allele at the right junction breakpoint.  
+    FAR_left:  Left fusion allelic ratio  
+    FAR_right:  Right fusion allelic ratio  
+    LeftBreakDinuc: the genomic dinucleotides found at the left breakpoint (putative splice site if splicing is involved).  
+    LeftBreakEntropy: entropy calculation for the 15 bases immediately upstream from the fusion junction.  
+    RightBreakDinuc:  the genomic dinucleotides found at the right breakpoint (putative splice site if splicing is involved).  
+    RightBreakEntropy: entropy calculation for the 15 bases immediately downstream from the fusion junction.  
+    FFPM: normalized measure of the quantity of RNA-Seq fragments supporting the fusion event as:  fusion fragments per total million RNA-Seq fragments.  
 
 ```{r}
 fusion_abdriged <- read.csv(params$fusionsabridgedcoding, sep = "\t")
