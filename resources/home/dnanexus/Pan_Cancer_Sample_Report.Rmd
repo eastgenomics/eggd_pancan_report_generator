@@ -60,7 +60,7 @@ Found fusions: `r fusion_abdriged$X.FusionName`
 
 GTEx v8 QC thresholds, passes are any metrics where:
 
-* ">" 10 million mapped reads;
+* mapped reads > 10 million;
 * read mapping rate > 0.2;
 * intergenic mapping rate < 0.3;
 * rRNA mapping rate < 0.3.
