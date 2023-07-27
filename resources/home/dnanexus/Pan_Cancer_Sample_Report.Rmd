@@ -376,7 +376,7 @@ plots <- list.files(pattern = "*.png")
 for(i in plots){
   filename <- file.path(i)
   tab_name <- gsub("_.*","",filename)
-  cat(sprintf(paste("\n### ", tab_name, "\n![](%s)\n", sep = ""), i))
+  cat(sprintf(paste("\n#### ", tab_name, "\n![](%s)\n", sep = ""), i))
 }
 
 ```
