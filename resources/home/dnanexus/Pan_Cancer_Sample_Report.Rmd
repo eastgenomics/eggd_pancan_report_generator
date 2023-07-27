@@ -119,8 +119,35 @@ max_cov <- as.numeric(rnaseqc_coverage_hgnc[order(rnaseqc_coverage_hgnc$coverage
 max_gene <-  rnaseqc_coverage_hgnc[order(rnaseqc_coverage_hgnc$coverage_mean, decreasing = T),][1,"hgnc_symbol"]                 
 ```
 
+```{r}
+ggplot(rnaseqc_coverage_hgnc, aes(rnaseqc_coverage_hgnc$coverage_mean)) +
+  geom_boxplot() + 
+  theme(
+         panel.background = element_rect(fill='transparent'),
+         plot.background = element_rect(fill='transparent', color=NA),
+         panel.grid.major = element_blank(),
+         panel.grid.minor = element_blank(),
+         legend.background = element_rect(fill='transparent'),
+         legend.box.background = element_rect(fill='transparent')
+       ) +
+  labs(x = "Mean Coverage", title = "All genes")
 
-For this sample, the maximum coverage for a gene is `r as.integer(max_cov)` for gene `r max_gene`
+ggplot(rnaseqc_coverage_hgnc, aes(rnaseqc_coverage_hgnc$coverage_mean)) +
+  geom_boxplot() + 
+  theme(
+         panel.background = element_rect(fill='transparent'),
+         plot.background = element_rect(fill='transparent', color=NA),
+         panel.grid.major = element_blank(),
+         panel.grid.minor = element_blank(),
+         legend.background = element_rect(fill='transparent'),
+         legend.box.background = element_rect(fill='transparent')
+       ) +
+  xlim(0, 50000) +
+  labs(x = "Mean Coverage", title = "All genes with mean coverages < 50000")
+
+```
+
+
 ```{r}
 datatable(rnaseqc_coverage_hgnc, editable = TRUE)
 ```
