@@ -202,6 +202,7 @@ datatable(rnaseqc_exonse_hgnc, editable = TRUE)
 
 ```{r}
 fusion_abdriged <- read.csv(params$fusionsabridgedcoding, sep = "\t")
+fusion_abdriged$X.FusionName <- gsub("--", "::",fusion_abdriged$X.FusionName)
 fusion_abdriged <- fusion_abdriged[,c(1:30,34,35,31,32,33)]
 datatable(fusion_abdriged)
 
