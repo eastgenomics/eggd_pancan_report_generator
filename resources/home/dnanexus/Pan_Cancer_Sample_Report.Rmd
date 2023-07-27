@@ -67,12 +67,41 @@ GTEx v8 QC thresholds, not normals are any metrics where:
 
 
 ```{r}
-metrics <- read.csv(params$qcmetrics, sep = "\t", header = F)
+metrics <- read.csv("MB2002.star.bam.metrics.tsv", sep = "\t", header = F)
 colnames(metrics) <- c("QC_metric", "Value")
 metrics_filtered <- metrics[which(metrics$QC_metric %in% c("Mapping Rate", "Expression Profiling Efficiency", "Exonic Rate",
                                                     "Read Length", "Genes Detected", "Median Exon CV", "Exon CV MAD",
                                                     "Intronic Rate","Intergenic Rate","Intragenic Rate", "rRNA Rate",
                                                     "Duplicate Reads", "Mapped Reads", "Mapped Unique Reads", "rRNA Reads", "Total Reads")), ]
+metrics_filtered$Status <- rep(NA, nrow(metrics_filtered))
+# check the 4 QC_metrics thresholds are met
+options(scipen=99)
+metric_threshold_df <- data.frame(c("Mapped Reads", "Mapping Rate", "Intergenic Rate", "rRNA Rate"),
+                                  c(10000000, 0.2 ,0.2, 0.3),
+                                  c(">", ">", "<", "<"))
+colnames(metric_threshold_df) <- c("metric", "value", "pass_condition")
+
+for (i in 1:nrow(metric_threshold_df)){
+  metric = metric_threshold_df[i, "metric"]
+  threshold = metric_threshold_df[i, "value"]
+  condition = metric_threshold_df[i, "pass_condition"]
+  if (condition == ">" ){
+    if ( metrics_filtered[which(metrics_filtered$QC_metric == metric),"Value"] > threshold ){
+      metrics_filtered[which(metrics_filtered$QC_metric == metric),"Status"] <- "PASS"
+    } else {
+      metrics_filtered[which(metrics_filtered$QC_metric == metric),"Status"] <- "FAIL"
+    }
+  }
+  else {
+    if ( metrics_filtered[which(metrics_filtered$QC_metric == metric),"Value"] < threshold ){
+      metrics_filtered[which(metrics_filtered$QC_metric == metric),"Status"] <- "PASS"
+    } else {
+      metrics_filtered[which(metrics_filtered$QC_metric == metric),"Status"] <- "FAIL"
+    }
+  }
+}
+
+metrics_filtered <- metrics_filtered[order(metrics_filtered$Status),]
 datatable(metrics_filtered)
 ```
 
