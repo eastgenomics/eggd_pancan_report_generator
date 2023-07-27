@@ -49,12 +49,12 @@ fusion_abdriged$X.FusionName <- gsub("--", "::",fusion_abdriged$X.FusionName)
 
 ### 1.1 Sample Meta Data
 
-Sample ID: `r params$samplename`
-Gender: `r params$sexphenotype`
-Age: NA
-Tumour Type: NA
-Target list: `r params$targetlist`
-Found fusions: `r fusion_abdriged$X.FusionName`
+Sample ID: `r params$samplename`  
+Gender: `r params$sexphenotype`  
+Age: NA  
+Tumour Type: NA  
+Target list: `r params$targetlist`  
+Found fusions: `r fusion_abdriged$X.FusionName`  
 
 ### 1.2 Sample QC
 
@@ -115,7 +115,9 @@ datatable(rnaseqc_exonse_hgnc, editable = TRUE)
 
 ## 3. Fusion Prediction
 
-### 3.1 Fusion Prediction
+### 3.1 Fusion Prediction {.tabset .tabset-dropdown}
+
+#### Columm names defintions
 
     FusionName: name of the fusion as geneA--geneB
     JunctionReadCount: number of split RNA-Seq reads that map and define the fusion breakpoint. 
