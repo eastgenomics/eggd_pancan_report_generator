@@ -58,12 +58,12 @@ Found fusions: `r fusion_abdriged$X.FusionName`
 
 ### 1.2 Sample QC
 
-GTEx v8 QC thresholds, not normals are any metrics where:
+GTEx v8 QC thresholds, passes are any metrics where:
 
-* < 10 million mapped reads;
-* read mapping rate < 0.2;
-* intergenic mapping rate > 0.3;
-* rRNA mapping rate > 0.3.
+* ">" 10 million mapped reads;
+* read mapping rate > 0.2;
+* intergenic mapping rate < 0.3;
+* rRNA mapping rate < 0.3.
 
 
 ```{r}
@@ -365,6 +365,20 @@ plot_circle(FI_fusion)
 #    fusion,
 #    edb)
 #}
+
+for (f in 1:nrow(fusion_abdriged)) {
+ cmd = paste("Rscript chimeraviz.R", params$ensbsqlite, params$bam, params$fusionsabridgedcoding, f)
+ system(cmd)
+}
+
+plots <- list.files(pattern = "*.png")
+
+for(i in plots){
+  filename <- file.path(i)
+  tab_name <- gsub("_.*","",filename)
+  cat(sprintf(paste("\n### ", tab_name, "\n![](%s)\n", sep = ""), i))
+}
+
 ```
 
 ## 4. Session Info
