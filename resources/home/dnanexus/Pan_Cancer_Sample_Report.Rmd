@@ -16,6 +16,8 @@ params:
   ref_annot:
   mane:
   chimerkb:
+  age:
+  tumourtype:
 output:
   html_document:
     code_folding: hide
@@ -37,24 +39,29 @@ library("readxl")
 library(dplyr)
 install.packages("gt")
 library(gt)
+library(ggplot2)
 ```
 
 
 ## 1. Sample Info
-
 ```{r}
 fusion_abdriged <- read.csv("MB2002.FusionInspector.fusions.abridged.tsv.coding_effect", sep = "\t")
 fusion_abdriged$X.FusionName <- gsub("--", "::",fusion_abdriged$X.FusionName)
 ```
-
 ### 1.1 Sample Meta Data
 
-Sample ID: `r params$samplename`  
-Gender: `r params$sexphenotype`  
-Age: NA  
-Tumour Type: NA  
-Target list: `r params$targetlist`  
-Found fusions: `r fusion_abdriged$X.FusionName`  
+```{r}
+df <- as.data.frame(rbind(c("Sample_ID", params$samplename),
+                c("Gender", params$sexphenotype),
+                c("Age", params$age ),
+                c("Tumour type", params$tumourtype),
+                c("Target list", params$targetlist),
+                c("Predicted fusions", paste0(fusion_abdriged$X.FusionName, collapse = ' '))))
+
+colnames(df) <- c("Meta data", "Sample Info")
+datatable(df, rownames=F)
+```
+
 
 ### 1.2 Sample QC
 
@@ -67,12 +74,13 @@ GTEx v8 QC thresholds, passes are any metrics where:
 
 
 ```{r}
-metrics <- read.csv("MB2002.star.bam.metrics.tsv", sep = "\t", header = F)
+metrics <- read.csv(params$qcmetrics, sep = "\t", header = F)
 colnames(metrics) <- c("QC_metric", "Value")
 metrics_filtered <- metrics[which(metrics$QC_metric %in% c("Mapping Rate", "Expression Profiling Efficiency", "Exonic Rate",
                                                     "Read Length", "Genes Detected", "Median Exon CV", "Exon CV MAD",
                                                     "Intronic Rate","Intergenic Rate","Intragenic Rate", "rRNA Rate",
                                                     "Duplicate Reads", "Mapped Reads", "Mapped Unique Reads", "rRNA Reads", "Total Reads")), ]
+
 metrics_filtered$Status <- rep(NA, nrow(metrics_filtered))
 # check the 4 QC_metrics thresholds are met
 options(scipen=99)
@@ -102,7 +110,8 @@ for (i in 1:nrow(metric_threshold_df)){
 }
 
 metrics_filtered <- metrics_filtered[order(metrics_filtered$Status),]
-datatable(metrics_filtered, rownames = F, rownames = F)
+
+datatable(metrics_filtered, rownames=F)
 ```
 
 ## 2. RNA Coverage 
@@ -119,9 +128,18 @@ max_cov <- as.numeric(rnaseqc_coverage_hgnc[order(rnaseqc_coverage_hgnc$coverage
 max_gene <-  rnaseqc_coverage_hgnc[order(rnaseqc_coverage_hgnc$coverage_mean, decreasing = T),][1,"hgnc_symbol"]                 
 ```
 
+
 ```{r}
-ggplot(rnaseqc_coverage_hgnc, aes(rnaseqc_coverage_hgnc$coverage_mean)) +
-  geom_boxplot() + 
+genes <- genes <- unlist(strsplit(fusion_abdriged$X.FusionName, "::"))
+rnaseqc_coverage_hgnc_fusions <- rnaseqc_coverage_hgnc[which(rnaseqc_coverage_hgnc$hgnc_symbol %in% genes),]
+
+
+rnaseqc_coverage_hgnc %>%
+  ggplot(aes(rnaseqc_coverage_hgnc$coverage_mean)) +
+  geom_boxplot() +
+  geom_dotplot(data = rnaseqc_coverage_hgnc_fusions,
+               aes(rnaseqc_coverage_hgnc_fusions$coverage_mean),binaxis='x',
+               stackdir='center',dotsize=0.5,color='red') +
   theme(
          panel.background = element_rect(fill='transparent'),
          plot.background = element_rect(fill='transparent', color=NA),
@@ -131,25 +149,10 @@ ggplot(rnaseqc_coverage_hgnc, aes(rnaseqc_coverage_hgnc$coverage_mean)) +
          legend.box.background = element_rect(fill='transparent')
        ) +
   labs(x = "Mean Coverage", title = "All genes")
-
-ggplot(rnaseqc_coverage_hgnc, aes(rnaseqc_coverage_hgnc$coverage_mean)) +
-  geom_boxplot() + 
-  theme(
-         panel.background = element_rect(fill='transparent'),
-         plot.background = element_rect(fill='transparent', color=NA),
-         panel.grid.major = element_blank(),
-         panel.grid.minor = element_blank(),
-         legend.background = element_rect(fill='transparent'),
-         legend.box.background = element_rect(fill='transparent')
-       ) +
-  xlim(0, 50000) +
-  labs(x = "Mean Coverage", title = "All genes with mean coverages < 50000")
-
 ```
 
-
 ```{r}
-datatable(rnaseqc_coverage_hgnc, editable = TRUE, rownames = F)
+datatable(rnaseqc_coverage_hgnc, rownames = F)
 ```
 
 
@@ -162,51 +165,49 @@ rnaseqc_exons <- separate(data = rnaseqc_exons, col = Exon.ID, into = c("Gene_ID
 rnaseqc_exonse_hgnc <- rnaseqc_exons[which(rnaseqc_exons$Gene_ID %in% rnaseqc_coverage_hgnc$ENSG_id),]
 rnaseqc_exonse_hgnc$hgnc_symbol <- rnaseqc_coverage_hgnc$hgnc_symbol[match(rnaseqc_exonse_hgnc$Gene_ID, rnaseqc_coverage_hgnc$ENSG_id)]
 rnaseqc_exonse_hgnc$hgnc_id<- rnaseqc_coverage_hgnc$hgnc_id[match(rnaseqc_exonse_hgnc$Gene_ID, rnaseqc_coverage_hgnc$ENSG_id)]
-rnaseqc_exonse_hgnc <- rnaseqc_exonse_hgnc[,c("hgnc_id", "hgnc_symbol", "Gene_ID", "Exon", "Exon.CV")]
+rnaseqc_exonse_hgnc <- rnaseqc_exonse_hgnc[,c("hgnc_symbol", "hgnc_id", "Gene_ID", "Exon", "Exon.CV")]
 ```
 
 ```{r}
-datatable(rnaseqc_exonse_hgnc, editable = TRUE, rownames = F)
+datatable(rnaseqc_exonse_hgnc, rownames = F)
 ```
 
-## 3. Fusion Prediction
+## 3. Fusions
 
-### 3.1 Fusion Prediction {.tabset .tabset-dropdown}
+### 3.1 Fusion Prediction
 
 #### Columm names defintions
 
-    FusionName: name of the fusion as geneA--geneB  
-    JunctionReadCount: number of split RNA-Seq reads that map and define the fusion breakpoint.  
-    SpanningFragCount: number of paired-end reads that span the fusion breakpoint but the reads do not directly overlap the breakpoint.  
-    LeftGene: identifier of the gene represented by the left section of the fusion transcript.  
-    LeftLocalBreakpoint: position of the left fusion breakpoint in the context of the FusionInspector mini-fusion-gene contig.  
-    LeftBreakpoint: position of the left fusion breakpoint in the context of the genome.  
-    RightGene:  identifier of the gene represented by the right section of the fusion transcript.  
-    RightLocalBreakpoint: position of the right fusion breakpoint in the context of the FusionInspector min-fusion-gene contig.  
-    RightBreakpoint: position of the right fusion breakpoint in the context of the genome.  
-    SpliceType: category of support at the fusion breakpoint: {
-                ONLY_REF_SPLICE: fusion breakpoint occurs at reference (known) splice junctions.
-                INCL_NON_REF_SPLICE: fusion breakpoint occurs at a breakpoint that does not involve all reference (known) exon junctions.
-                NO_JUNCTION_READS_IDENTIFIED: only spanning fragments support the fusion. (can only happen if --min_junction_reads is set to zero).
-           }  
-    LargeAnchorSupport:  YES|NO, indicates whether there are at least 25 aligned bases on each side of the fusion breakpoint.  
-    NumCounterFusionLeft:  Number of RNA-Seq fragments supporting the alternative non-fused allele at the left junction breakpoint.   
-    NumCounterFusionRight:  Number of RNA-Seq fragments supporting the alternative non-fused allele at the right junction breakpoint.  
-    FAR_left:  Left fusion allelic ratio  
-    FAR_right:  Right fusion allelic ratio  
-    LeftBreakDinuc: the genomic dinucleotides found at the left breakpoint (putative splice site if splicing is involved).  
-    LeftBreakEntropy: entropy calculation for the 15 bases immediately upstream from the fusion junction.  
-    RightBreakDinuc:  the genomic dinucleotides found at the right breakpoint (putative splice site if splicing is involved).  
-    RightBreakEntropy: entropy calculation for the 15 bases immediately downstream from the fusion junction.  
-    FFPM: normalized measure of the quantity of RNA-Seq fragments supporting the fusion event as:  fusion fragments per total million RNA-Seq fragments.  
+      FusionName: name of the fusion as geneA--geneB  
+      JunctionReadCount: number of split RNA-Seq reads that map and define the fusion breakpoint.  
+      SpanningFragCount: number of paired-end reads that span the fusion breakpoint but the reads do not directly overlap the breakpoint.  
+      LeftGene: identifier of the gene represented by the left section of the fusion transcript.  
+      LeftLocalBreakpoint: position of the left fusion breakpoint in the context of the FusionInspector mini-fusion-gene contig.  
+      LeftBreakpoint: position of the left fusion breakpoint in the context of the genome.  
+      RightGene:  identifier of the gene represented by the right section of the fusion transcript.  
+      RightLocalBreakpoint: position of the right fusion breakpoint in the context of the FusionInspector min-fusion-gene contig.  
+      RightBreakpoint: position of the right fusion breakpoint in the context of the genome.  
+      SpliceType: category of support at the fusion breakpoint: {
+            ONLY_REF_SPLICE: fusion breakpoint occurs at reference (known) splice junctions.
+            INCL_NON_REF_SPLICE: fusion breakpoint occurs at a breakpoint that does not involve all reference (known) exon junctions.
+            NO_JUNCTION_READS_IDENTIFIED: only spanning fragments support the fusion. (can only happen if --min_junction_reads is set to zero).
+       }  
+      LargeAnchorSupport:  YES|NO, indicates whether there are at least 25 aligned bases on each side of the fusion breakpoint.  
+      NumCounterFusionLeft:  Number of RNA-Seq fragments supporting the alternative non-fused allele at the left junction breakpoint.   
+      NumCounterFusionRight:  Number of RNA-Seq fragments supporting the alternative non-fused allele at the right junction breakpoint.  
+      FAR_left:  Left fusion allelic ratio  
+      FAR_right:  Right fusion allelic ratio  
+      LeftBreakDinuc: the genomic dinucleotides found at the left breakpoint (putative splice site if splicing is involved).  
+      LeftBreakEntropy: entropy calculation for the 15 bases immediately upstream from the fusion junction.  
+      RightBreakDinuc:  the genomic dinucleotides found at the right breakpoint (putative splice site if splicing is involved).  
+      RightBreakEntropy: entropy calculation for the 15 bases immediately downstream from the fusion junction.  
+      FFPM: normalized measure of the quantity of RNA-Seq fragments supporting the fusion event as:  fusion fragments per total million RNA-Seq fragments.  
 
 ```{r}
 fusion_abdriged <- read.csv(params$fusionsabridgedcoding, sep = "\t")
 fusion_abdriged$X.FusionName <- gsub("--", "::",fusion_abdriged$X.FusionName)
 fusion_abdriged <- fusion_abdriged[,c(1:30,34,35,31,32,33)]
 datatable(fusion_abdriged, rownames = F)
-
-
 ```
 
 
@@ -284,7 +285,11 @@ df2$MANE_Status <- mane$MANE_status[match(df2$transcript_id, mane$Ensembl_nuc)]
 datatable(df2, rownames = F)
 ```
 
-### 3.2 Fusion Prediction Annotation
+### 3.3 Fusion Prediction Annotation
+
+The table below lists all the chimerDB fusion annotation for the predicted fusions.  
+
+Please keep in mind that the annotation for chimerDB is build 37.  
 
 ```{r}
 fusion_abdriged_annotation <- read.csv(params$fusionsabridgedcoding, sep = "\t")
@@ -296,8 +301,12 @@ genes <- unlist(strsplit(fusion_abdriged_annotation[,1], "--"))
 chimerkb <- read_excel(params$chimerkb)
 gene_nice <- gsub("--", "-", fusion_abdriged_annotation[,1])
 chimerkb_sample_fusions <- chimerkb[which(chimerkb$Fusion_pair %in% gene_nice),]
-datatable(chimerkb_sample_fusions, rownames = F)
+datatable(chimerkb_sample_fusions, rownames=F)
 ```
+
+The table below lists URL links to different annotation databases. These are:
+* OncoKB
+* ClinicalTrials.gov
 
 ```{r url_links}
 fusion_abdriged_annotation$gene_fusion1 <- genes[seq_along(genes) %% 2 > 0]
@@ -309,9 +318,9 @@ make_hyperlink = function(myurl,mytext=myurl) {
 }
 
 
-fusion_abdriged_annotation$gene_fusion_cosmic <- ""
-fusion_abdriged_annotation[1, "gene_fusion_cosmic"] <- "https://cancer.sanger.ac.uk/cosmic/fusion/overview?fid=322436&gid=368386"
-fusion_abdriged_annotation[3, "gene_fusion_cosmic"] <- "https://cancer.sanger.ac.uk/cosmic/fusion/overview?fid=394618&gid=249070"
+#fusion_abdriged_annotation$gene_fusion_cosmic <- ""
+#fusion_abdriged_annotation[1, "gene_fusion_cosmic"] <- "https://cancer.sanger.ac.uk/cosmic/fusion/overview?fid=322436&gid=368386"
+#fusion_abdriged_annotation[3, "gene_fusion_cosmic"] <- "https://cancer.sanger.ac.uk/cosmic/fusion/overview?fid=394618&gid=249070"
 
 
 fusion_abdriged_annotation$gene_fusion1_oncokb <- c(paste("https://www.oncokb.org/gene/", fusion_abdriged_annotation$gene_fusion1, "/Fusions?refGenome=GRCh38" , sep = ""))
@@ -320,12 +329,12 @@ fusion_abdriged_annotation$gene_fusion2_oncokb <- c(paste("https://www.oncokb.or
 fusion_abdriged_annotation$gene_fusion1_CT <- c(paste("https://clinicaltrials.gov/search?term=", fusion_abdriged_annotation$gene_fusion1, "%20Fusion" , sep = ""))
 fusion_abdriged_annotation$gene_fusion2_CT <- c(paste("https://clinicaltrials.gov/search?term=", fusion_abdriged_annotation$gene_fusion2, "%20Fusion" , sep = ""))
 
-
+# rename column
+names(fusion_abdriged_annotation)[names(fusion_abdriged_annotation) == "X.FusionName"] <- "Fusion Pair"
 fusion_abdriged_annotation_final <-  fusion_abdriged_annotation %>%
   gt() %>%
   fmt(
-    columns = c('gene_fusion_cosmic',
-                'gene_fusion1_oncokb','gene_fusion2_oncokb',
+    columns = c('gene_fusion1_oncokb','gene_fusion2_oncokb',
                 'gene_fusion1_CT','gene_fusion2_CT'),
     fns = make_hyperlink
   )
@@ -335,7 +344,7 @@ fusion_abdriged_annotation_final
 ```
 
 
-### 3.3 Fusion Plots
+### 3.4 Fusion Structures
 
 
 ```{r, warning=F,fig.width=10, fig.height=10}
@@ -345,7 +354,7 @@ plot_circle(FI_fusion)
 ```
 
 
-```{r chimeraviz_plot_generation}
+```{r chimeraviz_plot_generation, results="asis"}
 
 # get bam file
 #fusion_reads <- "/home/aisha/Documents/Projects/cancer/sample_report/MB2002.star.bam"
@@ -376,9 +385,8 @@ plots <- list.files(pattern = "*.png")
 for(i in plots){
   filename <- file.path(i)
   tab_name <- gsub("_.*","",filename)
-  cat(sprintf(paste("\n#### ", tab_name, "\n![](%s)\n", sep = ""), i))
+  cat(sprintf(paste("\n### ", tab_name, "\n![](%s)\n", sep = ""), i))
 }
-
 ```
 
 ## 4. Session Info
