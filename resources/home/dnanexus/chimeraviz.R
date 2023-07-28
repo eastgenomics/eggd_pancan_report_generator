@@ -24,7 +24,13 @@ fusion_df <- read.csv(args[3], sep = "\t")
 filename <- fusion_df[args[4],1]
 
 ## plots
-png(paste(filename, "transcript_plot.png", sep = "_"))
+png(paste(filename, "gene_plot.png", sep = "_"))
+plot_fusion_transcript(
+    fusion,
+    edb)
+dev.off()
+
+png(paste(filename, "transcript_plot.png", sep = "_"), width = 1000)
 plot_fusion(
     fusion = fusion,
     bamfile = fusion_reads,
@@ -32,8 +38,3 @@ plot_fusion(
     non_ucsc = TRUE)
 dev.off()
 
-png(paste(filename, "gene_plot.png", sep = "_"))
-plot_fusion_transcript(
-    fusion,
-    edb)
-dev.off()
