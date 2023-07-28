@@ -15,7 +15,7 @@ main() {
     sudo dpkg -i libtinfo5_6.2-0ubuntu2_amd64.deb
     sudo dpkg -i libncurses5_6.2-0ubuntu2_amd64.deb
 
-    samtools view -H $bam_name \
+    samtools view -H $bam_name | \
     sed -e 's/chr1/1/g; s/chr2/2/
         s/chr3/3/g; s/chr4/4/
         s/chr5/5/g; s/chr6/6/
@@ -37,7 +37,7 @@ main() {
     CHI_IMAGE_ID=$(sudo docker images --format="{{.Repository}} {{.ID}}" | grep "^sample_report" | cut -d' ' -f2)
 
     # get the Rscript with the paths in
-    echo "Rscript -e \"rmarkdown::render('${rmarkdown_name}', \
+    echo "Rscript -e \"rmarkdown::render('Pan_Cancer_Sample_Report.Rmd', \
     params = list(qcmetrics = '$rnaseqc_metrics_name', \
     qcgenecov = '$rnaseqc_coverage_name', \
     capturegenes = '$capture_bed_name', \
@@ -45,17 +45,19 @@ main() {
     fusionsabridgedcoding = '$fusioninspector_abridged_name', \
     ensbsqlite = '$ensdb_sqlite_name', \
     bam = '${bam_prefix}.nochr.bam', \
-    samplename = 'NA', \
-    sexphenotype = 'NA', \
-    targetlist = 'NA', \
+    samplename = '$bam_prefix', \
+    sexphenotype = '$sex_phenotype', \
+    targetlist = '$target_list', \
     ref_annot = '$ref_annot_name', \
     mane = '$MANE_name', \
-    chimerkb='$chimerkb_name'))\"" > cmd.sh
+    chimerkb='$chimerkb_name', \
+    age = '$age', tumourtype = '$tumour_type'))\"" > cmd.sh
 
 
     docker run -v /home/dnanexus:/home/software $CHI_IMAGE_ID /bin/bash -c 'bash cmd.sh'
 
     mkdir -p /home/dnanexus/out/html_report/
+    mv Pan_Cancer_Sample_Report.html ${bam_prefix}_PanCancer_Report.html
 
     mv *.html /home/dnanexus/out/html_report/
     dx-upload-all-outputs
