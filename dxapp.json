@@ -77,12 +77,27 @@
       "help": ""
     },
     {
-      "name": "rmarkdown",
-      "class": "file",
-      "optional": false,
-      "patterns": [
-        "*.Rmd"
-      ],
+      "name": "age",
+      "class": "string",
+      "optional": true,
+      "help": ""
+    },
+    {
+      "name": "tumour_type",
+      "class": "string",
+      "optional": true,
+      "help": ""
+    },
+    {
+      "name": "target_list",
+      "class": "string",
+      "optional": true,
+      "help": ""
+    },
+    {
+      "name": "sex_phenotype",
+      "class": "string",
+      "optional": true,
       "help": ""
     },
     {
