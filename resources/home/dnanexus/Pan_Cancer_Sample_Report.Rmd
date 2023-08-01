@@ -18,6 +18,7 @@ params:
   chimerkb:
   age:
   tumourtype:
+  cosmic_fusions:
 output:
   html_document:
     code_folding: hide
@@ -40,6 +41,11 @@ library(dplyr)
 install.packages("gt")
 library(gt)
 library(ggplot2)
+library(xml2)
+library(tidyr)
+install.packages("rvest")
+library(rvest)
+library(stringr)
 ```
 
 
@@ -317,11 +323,26 @@ make_hyperlink = function(myurl,mytext=myurl) {
   paste('<a href="',myurl,'">',mytext,'</a>')
 }
 
+mega_fusion_html <-read_html(params$cosmic_fusions)
+my_df <- as.data.frame(mega_fusion_html %>% html_table(fill=TRUE))
+links <- mega_fusion_html %>% html_nodes("a") %>% html_attr("href")
+links_fusions <- grep("https://cancer.sanger.ac.uk/cosmic/fusion/overview?", links, value = TRUE) 
+my_df$links_fusions <- links_fusions
 
-#fusion_abdriged_annotation$gene_fusion_cosmic <- ""
-#fusion_abdriged_annotation[1, "gene_fusion_cosmic"] <- "https://cancer.sanger.ac.uk/cosmic/fusion/overview?fid=322436&gid=368386"
-#fusion_abdriged_annotation[3, "gene_fusion_cosmic"] <- "https://cancer.sanger.ac.uk/cosmic/fusion/overview?fid=394618&gid=249070"
+for (i in 1:nrow(my_df)) {
+  fusion <- my_df[i,1]
+  if (grepl("ENST",fusion, fixed = TRUE)) {
+    genes_vector <- str_split_1(fusion, "-")
+    my_df[i,"gene_fusion"] <- paste(gsub("_.*","",genes_vector[1]), gsub("_.*","",genes_vector[2]), sep = "-")
+  } else {
+    my_df[i,"gene_fusion"] <- fusion
+  }
+}
 
+fusion_abdriged_annotation$gene_nice <- gsub("--", "-", fusion_abdriged_annotation[,1])
+filtered_my_df <- my_df[which(my_df$gene_fusion %in% fusion_abdriged_annotation$gene_nice),]
+fusion_abdriged_annotation$gene_fusion_cosmic <- ""
+fusion_abdriged_annotation$gene_fusion_cosmic <- filtered_my_df$links_fusions[match(fusion_abdriged_annotation$gene_nice, filtered_my_df$gene_fusion)]
 
 fusion_abdriged_annotation$gene_fusion1_oncokb <- c(paste("https://www.oncokb.org/gene/", fusion_abdriged_annotation$gene_fusion1, "/Fusions?refGenome=GRCh38" , sep = ""))
 fusion_abdriged_annotation$gene_fusion2_oncokb <- c(paste("https://www.oncokb.org/gene/", fusion_abdriged_annotation$gene_fusion2, "/Fusions?refGenome=GRCh38" , sep = ""))
@@ -331,15 +352,20 @@ fusion_abdriged_annotation$gene_fusion2_CT <- c(paste("https://clinicaltrials.go
 
 # rename column
 names(fusion_abdriged_annotation)[names(fusion_abdriged_annotation) == "X.FusionName"] <- "Fusion Pair"
-fusion_abdriged_annotation_final <-  fusion_abdriged_annotation %>%
-  gt() %>%
-  fmt(
-    columns = c('gene_fusion1_oncokb','gene_fusion2_oncokb',
-                'gene_fusion1_CT','gene_fusion2_CT'),
-    fns = make_hyperlink
-  )
+# drop column
+fusion_abdriged_annotation <- fusion_abdriged_annotation[,!names(fusion_abdriged_annotation) %in% c("gene_nice")]
+# remove NAs
+fusion_abdriged_annotation[is.na(fusion_abdriged_annotation)] <- ""
+fusion_abdriged_annotation_urls <- fusion_abdriged_annotation
+for (i in 1:nrow(fusion_abdriged_annotation_urls)) {
+  fusion_abdriged_annotation_urls[i, 'gene_fusion_cosmic'] <- make_hyperlink(fusion_abdriged_annotation_urls[i, 'gene_fusion_cosmic'], fusion_abdriged_annotation_urls[i, 'gene_fusion_cosmic'])
+  fusion_abdriged_annotation_urls[i, 'gene_fusion1_oncokb'] <- make_hyperlink(fusion_abdriged_annotation_urls[i, 'gene_fusion1_oncokb'], fusion_abdriged_annotation_urls[i, 'gene_fusion1_oncokb'])
+  fusion_abdriged_annotation_urls[i, 'gene_fusion2_oncokb'] <- make_hyperlink(fusion_abdriged_annotation_urls[i, 'gene_fusion2_oncokb'], fusion_abdriged_annotation_urls[i, 'gene_fusion2_oncokb'])
+  fusion_abdriged_annotation_urls[i, 'gene_fusion1_CT'] <- make_hyperlink(fusion_abdriged_annotation_urls[i, 'gene_fusion1_CT'], fusion_abdriged_annotation_urls[i, 'gene_fusion1_CT'])
+  fusion_abdriged_annotation_urls[i, 'gene_fusion2_CT'] <- make_hyperlink(fusion_abdriged_annotation_urls[i, 'gene_fusion2_CT'], fusion_abdriged_annotation_urls[i, 'gene_fusion2_CT'])
+}
+datatable(fusion_abdriged_annotation_urls, escape=FALSE)
 
-fusion_abdriged_annotation_final
 
 ```
 
