@@ -65,7 +65,14 @@ df <- as.data.frame(rbind(c("Sample_ID", params$samplename),
                 c("Predicted fusions", paste0(fusion_abdriged$X.FusionName, collapse = ' '))))
 
 colnames(df) <- c("Meta data", "Sample Info")
-datatable(df, rownames=F)
+datatable(df, rownames = F, 
+  escape=FALSE, extensions = c('FixedColumns','Buttons'),
+  options = list(
+    scrollX = TRUE,
+    dom = 'Bfrtip',
+    buttons = c('copy', 'csv', 'excel')
+  )
+)
 ```
 
 
@@ -117,7 +124,15 @@ for (i in 1:nrow(metric_threshold_df)){
 
 metrics_filtered <- metrics_filtered[order(metrics_filtered$Status),]
 
-datatable(metrics_filtered, rownames=F)
+datatable(metrics_filtered, rownames = F, 
+  escape=FALSE, extensions = c('FixedColumns','Buttons'),
+  options = list(
+    scrollX = TRUE,
+    fixedColumns = list(leftColumns = 1),
+    dom = 'Bfrtip',
+    buttons = c('copy', 'csv', 'excel')
+  )
+)
 ```
 
 ## 2. RNA Coverage 
@@ -158,7 +173,15 @@ rnaseqc_coverage_hgnc %>%
 ```
 
 ```{r}
-datatable(rnaseqc_coverage_hgnc, rownames = F)
+datatable(rnaseqc_coverage_hgnc, rownames = F, 
+  escape=FALSE, extensions = c('FixedColumns','Buttons'),
+  options = list(
+    scrollX = TRUE,
+    fixedColumns = list(leftColumns = 1),
+    dom = 'Bfrtip',
+    buttons = c('copy', 'csv', 'excel')
+  )
+)
 ```
 
 
@@ -175,7 +198,15 @@ rnaseqc_exonse_hgnc <- rnaseqc_exonse_hgnc[,c("hgnc_symbol", "hgnc_id", "Gene_ID
 ```
 
 ```{r}
-datatable(rnaseqc_exonse_hgnc, rownames = F)
+datatable(rnaseqc_exonse_hgnc, rownames = F, 
+  escape=FALSE, extensions = c('FixedColumns','Buttons'),
+  options = list(
+    scrollX = TRUE,
+    fixedColumns = list(leftColumns = 1),
+    dom = 'Bfrtip',
+    buttons = c('copy', 'csv', 'excel')
+  )
+)
 ```
 
 ## 3. Fusions
@@ -213,7 +244,14 @@ datatable(rnaseqc_exonse_hgnc, rownames = F)
 fusion_abdriged <- read.csv(params$fusionsabridgedcoding, sep = "\t")
 fusion_abdriged$X.FusionName <- gsub("--", "::",fusion_abdriged$X.FusionName)
 fusion_abdriged <- fusion_abdriged[,c(1:30,34,35,31,32,33)]
-datatable(fusion_abdriged, rownames = F)
+datatable(fusion_abdriged, rownames = F,  extensions = c('FixedColumns','Buttons'),
+  options = list(
+    scrollX = TRUE,
+    fixedColumns = list(leftColumns = 1),
+    dom = 'Bfrtip',
+    buttons = c('copy', 'csv', 'excel')
+  )
+)
 ```
 
 
@@ -288,7 +326,14 @@ df2 <- df_fusion_annot %>% left_join( tmp,
 
 df2$MANE_Status <- mane$MANE_status[match(df2$transcript_id, mane$Ensembl_nuc)]
 
-datatable(df2, rownames = F)
+datatable(df2, rownames = F,  extensions = c('FixedColumns','Buttons'),
+  options = list(
+    scrollX = TRUE,
+    fixedColumns = list(leftColumns = 1),
+    dom = 'Bfrtip',
+    buttons = c('copy', 'csv', 'excel')
+  )
+)
 ```
 
 ### 3.3 Fusion Prediction Annotation
@@ -307,7 +352,13 @@ genes <- unlist(strsplit(fusion_abdriged_annotation[,1], "--"))
 chimerkb <- read_excel(params$chimerkb)
 gene_nice <- gsub("--", "-", fusion_abdriged_annotation[,1])
 chimerkb_sample_fusions <- chimerkb[which(chimerkb$Fusion_pair %in% gene_nice),]
-datatable(chimerkb_sample_fusions, rownames=F)
+datatable(chimerkb_sample_fusions, rownames = F,  extensions = c('FixedColumns','Buttons'),
+  options = list(
+    scrollX = TRUE,
+    dom = 'Bfrtip',
+    buttons = c('copy', 'csv', 'excel')
+  )
+)
 ```
 
 The table below lists URL links to different annotation databases. These are:
@@ -364,7 +415,16 @@ for (i in 1:nrow(fusion_abdriged_annotation_urls)) {
   fusion_abdriged_annotation_urls[i, 'gene_fusion1_CT'] <- make_hyperlink(fusion_abdriged_annotation_urls[i, 'gene_fusion1_CT'], fusion_abdriged_annotation_urls[i, 'gene_fusion1_CT'])
   fusion_abdriged_annotation_urls[i, 'gene_fusion2_CT'] <- make_hyperlink(fusion_abdriged_annotation_urls[i, 'gene_fusion2_CT'], fusion_abdriged_annotation_urls[i, 'gene_fusion2_CT'])
 }
-datatable(fusion_abdriged_annotation_urls, escape=FALSE)
+
+datatable(fusion_abdriged_annotation_urls, rownames = F, 
+  escape=FALSE, extensions = c('FixedColumns','Buttons'),
+  options = list(
+    scrollX = TRUE,
+    fixedColumns = list(leftColumns = 1),
+    dom = 'Bfrtip',
+    buttons = c('copy', 'csv', 'excel')
+  )
+)
 
 
 ```
