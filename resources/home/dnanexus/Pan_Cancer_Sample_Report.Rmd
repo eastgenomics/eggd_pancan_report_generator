@@ -249,9 +249,13 @@ datatable(fusion_abdriged, rownames = F,  extensions = c('FixedColumns','Buttons
     scrollX = TRUE,
     fixedColumns = list(leftColumns = 1),
     dom = 'Bfrtip',
-    buttons = c('copy', 'csv', 'excel')
+    buttons = c('copy', 'csv', 'excel'),
+    autoWidth = TRUE,
+    columnDefs = list(list(width = '300px', targets = c(31,32)))
   )
 )
+
+
 ```
 
 
@@ -430,7 +434,7 @@ datatable(fusion_abdriged_annotation_urls, rownames = F,
 ```
 
 
-### 3.4 Fusion Structures
+### 3.4 Fusion Structures {.tabset}
 
 
 ```{r, warning=F,fig.width=10, fig.height=10}
@@ -471,7 +475,7 @@ plots <- list.files(pattern = "*.png")
 for(i in plots){
   filename <- file.path(i)
   tab_name <- gsub("_.*","",filename)
-  cat(sprintf(paste("\n### ", tab_name, "\n![](%s)\n", sep = ""), i))
+  cat(sprintf(paste("\n#### ", tab_name, "\n![](%s)\n", sep = ""), i))
 }
 ```
 
