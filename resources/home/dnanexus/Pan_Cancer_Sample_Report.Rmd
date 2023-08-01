@@ -51,7 +51,7 @@ library(stringr)
 
 ## 1. Sample Info
 ```{r}
-fusion_abdriged <- read.csv("MB2002.FusionInspector.fusions.abridged.tsv.coding_effect", sep = "\t")
+fusion_abdriged <- read.csv(params$fusionsabridgedcoding, sep = "\t")
 fusion_abdriged$X.FusionName <- gsub("--", "::",fusion_abdriged$X.FusionName)
 ```
 ### 1.1 Sample Meta Data
