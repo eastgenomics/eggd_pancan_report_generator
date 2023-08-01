@@ -126,6 +126,15 @@
         "*.xlsx"
       ],
       "help": ""
+    },
+    {
+      "name": "cosmic_fusions",
+      "class": "file",
+      "optional": false,
+      "patterns": [
+        "*.html"
+      ],
+      "help": ""
     }
   ],
   "outputSpec": [

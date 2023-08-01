@@ -51,7 +51,8 @@ main() {
     ref_annot = '$ref_annot_name', \
     mane = '$MANE_name', \
     chimerkb='$chimerkb_name', \
-    age = '$age', tumourtype = '$tumour_type'))\"" > cmd.sh
+    age = '$age', tumourtype = '$tumour_type', \
+    cosmic_fusions='$cosmic_fusions_name'))\"" > cmd.sh
 
 
     docker run -v /home/dnanexus:/home/software $CHI_IMAGE_ID /bin/bash -c 'bash cmd.sh'
@@ -59,6 +60,6 @@ main() {
     mkdir -p /home/dnanexus/out/html_report/
     mv Pan_Cancer_Sample_Report.html ${bam_prefix}_PanCancer_Report.html
 
-    mv *.html /home/dnanexus/out/html_report/
+    mv ${bam_prefix}_PanCancer_Report.html /home/dnanexus/out/html_report/
     dx-upload-all-outputs
 }
