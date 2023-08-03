@@ -366,8 +366,11 @@ datatable(chimerkb_sample_fusions, rownames = F,  extensions = c('FixedColumns',
 ```
 
 The table below lists URL links to different annotation databases. These are:
+
+* Cosmic
 * OncoKB
 * ClinicalTrials.gov
+
 
 ```{r url_links}
 fusion_abdriged_annotation$gene_fusion1 <- genes[seq_along(genes) %% 2 > 0]
