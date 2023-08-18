@@ -54,12 +54,16 @@ fusion_abdriged$X.FusionName <- gsub("--", "::",fusion_abdriged$X.FusionName)
 ### 1.1 Sample Meta Data
 
 ```{r}
+target_list <- gsub("-", "::",params$targetlist)
+predicted_fusions <- paste0(unique(fusion_abdriged$X.FusionName)))
+TP_fusions <- intersect(target_list, predicted_fusions)
 df <- as.data.frame(rbind(c("Sample_ID", params$samplename),
                 c("Gender", params$sexphenotype),
                 c("Age", params$age ),
                 c("Tumour type", params$tumourtype),
                 c("Target list", params$targetlist),
-                c("Predicted fusions", paste0(fusion_abdriged$X.FusionName, collapse = ' '))))
+                c("Predicted fusions", predicted_fusions),
+                c("True positive fusions", TP_fusions))
 
 colnames(df) <- c("Meta data", "Sample Info")
 datatable(df, rownames = F, 
@@ -132,83 +136,10 @@ datatable(metrics_filtered, rownames = F,
 )
 ```
 
-## 2. RNA Coverage 
 
-### 2.1 Coverage by Gene
+## 2. Fusions
 
-
-```{r coverage}
-rnaseqc_coverage <- read.csv(params$qcgenecov, sep = "\t")
-# get the genes on the capture
-capture_genes <- read.csv(params$capturegenes, header = F)
-rnaseqc_coverage_hgnc <- rnaseqc_coverage[which(rnaseqc_coverage$hgnc_symbol %in% capture_genes$V1),]
-max_cov <- as.numeric(rnaseqc_coverage_hgnc[order(rnaseqc_coverage_hgnc$coverage_mean, decreasing = T),][1,"coverage_mean"])
-max_gene <-  rnaseqc_coverage_hgnc[order(rnaseqc_coverage_hgnc$coverage_mean, decreasing = T),][1,"hgnc_symbol"]                 
-```
-
-
-```{r}
-genes <- genes <- unlist(strsplit(fusion_abdriged$X.FusionName, "::"))
-rnaseqc_coverage_hgnc_fusions <- rnaseqc_coverage_hgnc[which(rnaseqc_coverage_hgnc$hgnc_symbol %in% genes),]
-
-
-rnaseqc_coverage_hgnc %>%
-  ggplot(aes(rnaseqc_coverage_hgnc$coverage_mean)) +
-  geom_boxplot() +
-  geom_dotplot(data = rnaseqc_coverage_hgnc_fusions,
-               aes(rnaseqc_coverage_hgnc_fusions$coverage_mean),binaxis='x',
-               stackdir='center',dotsize=0.5,color='red') +
-  theme(
-         panel.background = element_rect(fill='transparent'),
-         plot.background = element_rect(fill='transparent', color=NA),
-         panel.grid.major = element_blank(),
-         panel.grid.minor = element_blank(),
-         legend.background = element_rect(fill='transparent'),
-         legend.box.background = element_rect(fill='transparent')
-       ) +
-  labs(x = "Mean Coverage", title = "All genes")
-```
-
-```{r}
-datatable(rnaseqc_coverage_hgnc, rownames = F, 
-  escape=FALSE, extensions = c('FixedColumns','Buttons'),
-  options = list(
-    scrollX = TRUE,
-    fixedColumns = list(leftColumns = 1),
-    dom = 'Bfrtip',
-    buttons = c('copy', 'csv', 'excel')
-  )
-)
-```
-
-
-### 2.2 Coverage by Exon
-
-```{r econ_coverage}
-rnaseqc_exons <- read.csv(params$qcexonscov, sep = "\t")
-rnaseqc_exons <- separate(data = rnaseqc_exons, col = Exon.ID, into = c("Gene_ID", "Exon"), sep = "_")
-# get the genes on the capture
-rnaseqc_exonse_hgnc <- rnaseqc_exons[which(rnaseqc_exons$Gene_ID %in% rnaseqc_coverage_hgnc$ENSG_id),]
-rnaseqc_exonse_hgnc$hgnc_symbol <- rnaseqc_coverage_hgnc$hgnc_symbol[match(rnaseqc_exonse_hgnc$Gene_ID, rnaseqc_coverage_hgnc$ENSG_id)]
-rnaseqc_exonse_hgnc$hgnc_id<- rnaseqc_coverage_hgnc$hgnc_id[match(rnaseqc_exonse_hgnc$Gene_ID, rnaseqc_coverage_hgnc$ENSG_id)]
-rnaseqc_exonse_hgnc <- rnaseqc_exonse_hgnc[,c("hgnc_symbol", "hgnc_id", "Gene_ID", "Exon", "Exon.CV")]
-```
-
-```{r}
-datatable(rnaseqc_exonse_hgnc, rownames = F, 
-  escape=FALSE, extensions = c('FixedColumns','Buttons'),
-  options = list(
-    scrollX = TRUE,
-    fixedColumns = list(leftColumns = 1),
-    dom = 'Bfrtip',
-    buttons = c('copy', 'csv', 'excel')
-  )
-)
-```
-
-## 3. Fusions
-
-### 3.1 Fusion Prediction
+### 2.1 Fusion Prediction
 
 #### Columm names defintions
 
@@ -241,7 +172,10 @@ datatable(rnaseqc_exonse_hgnc, rownames = F,
 fusion_abdriged <- read.csv(params$fusionsabridgedcoding, sep = "\t")
 fusion_abdriged$X.FusionName <- gsub("--", "::",fusion_abdriged$X.FusionName)
 fusion_abdriged <- fusion_abdriged[,c(1:30,34,35,31,32,33)]
-datatable(fusion_abdriged, rownames = F,  extensions = c('FixedColumns','Buttons'),
+fusion_abdriged_short_cols <- fusion_abdriged[, !names(fusion_abdriged) %in% c("FUSION_MODEL", "FUSION_CDS","FUSION_TRANSL")]
+fusion_abdriged_long_cols <- fusion_abdriged[, c("FUSION_MODEL", "FUSION_CDS","FUSION_TRANSL")]
+
+datatable(fusion_abdriged_short_cols, rownames = F,  extensions = c('FixedColumns','Buttons'),
   options = list(
     scrollX = TRUE,
     fixedColumns = list(leftColumns = 1),
@@ -252,11 +186,20 @@ datatable(fusion_abdriged, rownames = F,  extensions = c('FixedColumns','Buttons
   )
 )
 
-
+datatable(fusion_abdriged_long_cols, rownames = F,  extensions = c('FixedColumns','Buttons'),
+  options = list(
+    scrollX = TRUE,
+    fixedColumns = list(leftColumns = 1),
+    dom = 'Bfrtip',
+    buttons = c('copy', 'csv', 'excel'),
+    autoWidth = TRUE,
+    columnDefs = list(list(width = '300px', targets = c(31,32)))
+  )
+)
 ```
 
 
-### 3.2 Exon breakpoint annotation
+### 2.2 Exon breakpoint annotation
 
 
 ```{r Exons table}
@@ -337,7 +280,7 @@ datatable(df2, rownames = F,  extensions = c('FixedColumns','Buttons'),
 )
 ```
 
-### 3.3 Fusion Prediction Annotation
+### 2.3 Fusion Prediction Annotation
 
 The table below lists all the chimerDB fusion annotation for the predicted fusions.  
 
@@ -434,7 +377,7 @@ datatable(fusion_abdriged_annotation_urls, rownames = F,
 ```
 
 
-### 3.4 Fusion Structures {.tabset}
+### 2.4 Fusion Structures {.tabset}
 
 
 ```{r, warning=F,fig.width=10, fig.height=10}
@@ -478,6 +421,86 @@ for(i in plots){
   cat(sprintf(paste("\n#### ", tab_name, "\n![](%s)\n", sep = ""), i))
 }
 ```
+## 3. RNA Coverage 
+
+### 3.1 Coverage by Gene
+
+The first and last 500bp of each gene are dropped and not considered when computing coverage. A value of 0 or nan may
+indicate that the gene's coding length was less than 1kb or that the gene had 0 coverage over it's exons.
+
+* coverage_mean = mean of coverage of each gene
+* coverage_std = standard deviation of coverage of each gene (absolute measure of dispersion)
+* coverage_CV = coefficient of variation of coverage for each gene (relative measre of dispersion)
+
+```{r coverage}
+rnaseqc_coverage <- read.csv(params$qcgenecov, sep = "\t")
+# get the genes on the capture
+capture_genes <- read.csv(params$capturegenes, header = F)
+rnaseqc_coverage_hgnc <- rnaseqc_coverage[which(rnaseqc_coverage$hgnc_symbol %in% capture_genes$V1),]
+max_cov <- as.numeric(rnaseqc_coverage_hgnc[order(rnaseqc_coverage_hgnc$coverage_mean, decreasing = T),][1,"coverage_mean"])
+max_gene <-  rnaseqc_coverage_hgnc[order(rnaseqc_coverage_hgnc$coverage_mean, decreasing = T),][1,"hgnc_symbol"]                 
+```
+
+
+```{r}
+genes <- genes <- unlist(strsplit(fusion_abdriged$X.FusionName, "::"))
+rnaseqc_coverage_hgnc_fusions <- rnaseqc_coverage_hgnc[which(rnaseqc_coverage_hgnc$hgnc_symbol %in% genes),]
+
+
+rnaseqc_coverage_hgnc %>%
+  ggplot(aes(rnaseqc_coverage_hgnc$coverage_mean)) +
+  geom_boxplot() +
+  geom_dotplot(data = rnaseqc_coverage_hgnc_fusions,
+               aes(rnaseqc_coverage_hgnc_fusions$coverage_mean),binaxis='x',
+               stackdir='center',dotsize=0.5,color='red') +
+  theme(
+         panel.background = element_rect(fill='transparent'),
+         plot.background = element_rect(fill='transparent', color=NA),
+         panel.grid.major = element_blank(),
+         panel.grid.minor = element_blank(),
+         legend.background = element_rect(fill='transparent'),
+         legend.box.background = element_rect(fill='transparent')
+       ) +
+  labs(x = "Mean Coverage", title = "All genes")
+```
+
+```{r}
+datatable(rnaseqc_coverage_hgnc, rownames = F, 
+  escape=FALSE, extensions = c('FixedColumns','Buttons'),
+  options = list(
+    scrollX = TRUE,
+    fixedColumns = list(leftColumns = 1),
+    dom = 'Bfrtip',
+    buttons = c('copy', 'csv', 'excel')
+  )
+)
+```
+
+
+### 3.2 Coverage by Exon
+
+```{r econ_coverage}
+rnaseqc_exons <- read.csv(params$qcexonscov, sep = "\t")
+rnaseqc_exons <- separate(data = rnaseqc_exons, col = Exon.ID, into = c("Gene_ID", "Exon"), sep = "_")
+# get the genes on the capture
+rnaseqc_exonse_hgnc <- rnaseqc_exons[which(rnaseqc_exons$Gene_ID %in% rnaseqc_coverage_hgnc$ENSG_id),]
+rnaseqc_exonse_hgnc$hgnc_symbol <- rnaseqc_coverage_hgnc$hgnc_symbol[match(rnaseqc_exonse_hgnc$Gene_ID, rnaseqc_coverage_hgnc$ENSG_id)]
+rnaseqc_exonse_hgnc$hgnc_id<- rnaseqc_coverage_hgnc$hgnc_id[match(rnaseqc_exonse_hgnc$Gene_ID, rnaseqc_coverage_hgnc$ENSG_id)]
+rnaseqc_exonse_hgnc <- rnaseqc_exonse_hgnc[,c("hgnc_symbol", "hgnc_id", "Gene_ID", "Exon", "Exon.CV")]
+```
+
+```{r}
+datatable(rnaseqc_exonse_hgnc, rownames = F, 
+  escape=FALSE, extensions = c('FixedColumns','Buttons'),
+  options = list(
+    scrollX = TRUE,
+    fixedColumns = list(leftColumns = 1),
+    dom = 'Bfrtip',
+    buttons = c('copy', 'csv', 'excel')
+  )
+)
+```
+
 
 ## 4. Session Info
 
