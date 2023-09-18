@@ -26,11 +26,11 @@ output:
     toc_float: true
 ---
 
-```{r setup, include=FALSE}
+```{r 1-setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE ,warning = FALSE, message = FALSE)
 ```
 
-```{r, warning=FALSE}
+```{r 2-load_library, warning=FALSE}
 # load libraries
 library(DT)
 library(chimeraviz)
@@ -45,15 +45,15 @@ library(rvest)
 library(stringr)
 ```
 
-
 ## 1. Sample Info
-```{r}
+```{r 3-read_fusions_in}
 fusion_abdriged <- read.csv(params$fusionsabridgedcoding, sep = "\t")
+# hgvs suggests to present fusions with :: so replace the -- from fusioninspector with :: 
 fusion_abdriged$X.FusionName <- gsub("--", "::",fusion_abdriged$X.FusionName)
 ```
-### 1.1 Sample Meta Data
 
-```{r}
+### 1.1 Sample Meta Data
+```{r 4-present_metadata}
 target_list <- gsub("-", "::",params$targetlist)
 predicted_fusions <- unique(fusion_abdriged$X.FusionName)
 TP_fusions <- intersect(target_list, predicted_fusions)
@@ -91,7 +91,7 @@ GTEx v8 QC thresholds, passes are any metrics where:
 * rRNA mapping rate < 0.3.
 
 
-```{r}
+```{r 5-sample_QC}
 metrics <- read.csv(params$qcmetrics, sep = "\t", header = F)
 colnames(metrics) <- c("QC_metric", "Value")
 metrics_filtered <- metrics[which(metrics$QC_metric %in% c("Mapping Rate", "Expression Profiling Efficiency", "Exonic Rate",
@@ -172,9 +172,9 @@ datatable(metrics_filtered, rownames = F,
       RightBreakEntropy: entropy calculation for the 15 bases immediately downstream from the fusion junction.  
       FFPM: normalized measure of the quantity of RNA-Seq fragments supporting the fusion event as:  fusion fragments per total million RNA-Seq fragments.  
 
-```{r}
+```{r 6-fusioninspector_fusions}
 fusion_abdriged <- fusion_abdriged[,c(1:30,34,35,31,32,33)]
-fusion_abdriged_short_cols <- fusion_abdriged[, !names(fusion_abdriged) %in% c("FUSION_MODEL", "FUSION_CDS","FUSION_TRANSL")]
+fusion_abdriged_short_cols <- fusion_abdriged[, !names(fusion_abdriged) %in% c("FUSION_MODEL", "PFAM_LEFT","PFAM_RIGHT", "FUSION_CDS","FUSION_TRANSL")]
 fusion_abdriged_long_cols <- fusion_abdriged[, c("X.FusionName", "FUSION_MODEL", "FUSION_CDS","FUSION_TRANSL")]
 
 datatable(fusion_abdriged_short_cols, rownames = F,  extensions = c('FixedColumns','Buttons'),
@@ -202,7 +202,7 @@ datatable(fusion_abdriged_long_cols, rownames = F,  extensions = c('FixedColumns
 ### 2.2 Exon breakpoint annotation
 
 
-```{r Exons table}
+```{r 7-exons_table}
 try({
 mane <- read.csv(params$mane, sep = "\t")
 fusion_abdriged <- fusion_abdriged[,c(1:30,34,35,31,32,33)]
@@ -288,7 +288,7 @@ The table below lists all the chimerDB fusion annotation for the predicted fusio
 
 Please keep in mind that the annotation for chimerDB is build 37.  
 
-```{r}
+```{r 8-fusions_annotation}
 try({
 fusion_abdriged_annotation <- fusion_abdriged
 fusion_abdriged_annotation <- fusion_abdriged_annotation[,c(1:5)]
@@ -296,7 +296,7 @@ genes <- unlist(strsplit(fusion_abdriged_annotation$X.FusionName, "::"))
 })
 ```
 
-```{r chimerkb}
+```{r 9-chimerkb}
 try({
 chimerkb <- read_excel(params$chimerkb)
 gene_nice <- gsub("--", "-", fusion_abdriged_annotation[,1])
@@ -318,7 +318,7 @@ The table below lists URL links to different annotation databases. These are:
 * ClinicalTrials.gov
 
 
-```{r url_links}
+```{r 10-url_links}
 try({
   fusion_abdriged_annotation$gene_fusion1 <- genes[seq_along(genes) %% 2 > 0]
   fusion_abdriged_annotation$gene_fusion2 <- genes[seq_along(genes) %% 2 == 0]
@@ -387,46 +387,30 @@ try({
 ### 2.4 Fusion Structures {.tabset}
 
 
-```{r, warning=F,fig.width=10, fig.height=10}
-FI_fusion = import_starfusion(params$fusionsabridgedcoding, "hg38")
-plot_circle(FI_fusion)
-
+```{r 11-circle_plot, warning=F,fig.width=10, fig.height=10}
+try({
+  FI_fusion = import_starfusion(params$fusionsabridgedcoding, "hg38")
+  plot_circle(FI_fusion)
+})
 ```
 
 
-```{r chimeraviz_plot_generation, results="asis"}
-
-# get bam file
-#fusion_reads <- "/home/aisha/Documents/Projects/cancer/sample_report/MB2002.star.bam"
-#edb <- ensembldb::EnsDb("Homo_sapiens.GRCh38.103.sqlite" )
-
-
-#for (fusion_number in 1:nrow(fusion_abdriged)){
-#  fusion <- get_fusion_by_id(FI_fusion, fusion_number)
-#  print(fusion_abdriged[fusion_number,1])
-#  plot_fusion(
-#    fusion = fusion,
-#    bamfile = NULL,
-#    edb = edb,
-#    non_ucsc = T,
-#    reduce_transcripts= F)
-#  plot_fusion_transcript(
-#    fusion,
-#    edb)
-#}
-
-for (f in 1:nrow(fusion_abdriged)) {
- cmd = paste("Rscript chimeraviz.R", params$ensbsqlite, params$bam, params$fusionsabridgedcoding, f)
- system(cmd)
-}
-
-plots <- list.files(pattern = "*.png")
-
-for(i in plots){
-  filename <- file.path(i)
-  tab_name <- gsub("_.*","",filename)
-  cat(sprintf(paste("\n#### ", tab_name, "\n![](%s)\n", sep = ""), i))
-}
+```{r 12-chimeraviz_plot_generation, results="asis"}
+try({
+  for (f in 1:nrow(fusion_abdriged)) {
+    cmd = paste("Rscript chimeraviz.R", params$ensbsqlite, params$bam, params$fusionsabridgedcoding, f)
+    system(cmd)
+  }
+  
+  plots <- list.files(pattern = "*.png")
+  
+  for(i in plots){
+    filename <- file.path(i)
+    tab_name <- gsub("_.*","",filename)
+    cat(sprintf(paste("\n#### ", tab_name, "\n![](%s)\n", sep = ""), i))
+  }
+  
+})
 ```
 
 
@@ -441,17 +425,12 @@ indicate that the gene's coding length was less than 1kb or that the gene had 0 
 * coverage_std = standard deviation of coverage of each gene (absolute measure of dispersion)
 * coverage_CV = coefficient of variation of coverage for each gene (relative measre of dispersion)
 
-```{r coverage}
+```{r 13-gene_coverage}
 rnaseqc_coverage <- read.csv(params$qcgenecov, sep = "\t")
 # get the genes on the capture
 capture_genes <- read.csv(params$capturegenes, header = F)
 rnaseqc_coverage_hgnc <- rnaseqc_coverage[which(rnaseqc_coverage$hgnc_symbol %in% capture_genes$V1),]
-max_cov <- as.numeric(rnaseqc_coverage_hgnc[order(rnaseqc_coverage_hgnc$coverage_mean, decreasing = T),][1,"coverage_mean"])
-max_gene <-  rnaseqc_coverage_hgnc[order(rnaseqc_coverage_hgnc$coverage_mean, decreasing = T),][1,"hgnc_symbol"]                 
-```
-
-
-```{r}
+         
 if (!is.null(fusion_abdriged$X.FusionName)){
   genes <- unlist(strsplit(fusion_abdriged$X.FusionName, "--"))
   rnaseqc_coverage_hgnc_fusions <- rnaseqc_coverage_hgnc[which(rnaseqc_coverage_hgnc$hgnc_symbol %in% genes),]
@@ -485,9 +464,7 @@ if (!is.null(fusion_abdriged$X.FusionName)){
     ) +
     labs(x = "Mean Coverage", title = "All genes")
 }
-``` 
 
-```{r}
 datatable(rnaseqc_coverage_hgnc, rownames = F, 
   escape=FALSE, extensions = c('FixedColumns','Buttons'),
   options = list(
@@ -497,12 +474,11 @@ datatable(rnaseqc_coverage_hgnc, rownames = F,
     buttons = c('copy', 'csv', 'excel')
   )
 )
-```
-
+``` 
 
 ### 3.2 Coverage by Exon
 
-```{r exon_coverage}
+```{r 14-exon_coverage}
 try({
   rnaseqc_exons <- read.csv(params$qcexonscov, sep = "\t")
   rnaseqc_exons <- separate(data = rnaseqc_exons, col = Exon.ID, into = c("Gene_ID", "Exon"), sep = "_")
