@@ -55,15 +55,19 @@ fusion_abdriged$X.FusionName <- gsub("--", "::",fusion_abdriged$X.FusionName)
 
 ```{r}
 target_list <- gsub("-", "::",params$targetlist)
-predicted_fusions <- paste0(unique(fusion_abdriged$X.FusionName)))
+predicted_fusions <- unique(fusion_abdriged$X.FusionName)
 TP_fusions <- intersect(target_list, predicted_fusions)
+if (length(TP_fusions) == 0){
+  TP_fusions <- NA
+}
+predicted_fusions <- paste0(predicted_fusions, collapse = ", ")
 df <- as.data.frame(rbind(c("Sample_ID", params$samplename),
                 c("Gender", params$sexphenotype),
                 c("Age", params$age ),
                 c("Tumour type", params$tumourtype),
                 c("Target list", params$targetlist),
                 c("Predicted fusions", predicted_fusions),
-                c("True positive fusions", TP_fusions))
+                c("True positive fusions", TP_fusions)))
 
 colnames(df) <- c("Meta data", "Sample Info")
 datatable(df, rownames = F, 
@@ -169,11 +173,9 @@ datatable(metrics_filtered, rownames = F,
       FFPM: normalized measure of the quantity of RNA-Seq fragments supporting the fusion event as:  fusion fragments per total million RNA-Seq fragments.  
 
 ```{r}
-fusion_abdriged <- read.csv(params$fusionsabridgedcoding, sep = "\t")
-fusion_abdriged$X.FusionName <- gsub("--", "::",fusion_abdriged$X.FusionName)
 fusion_abdriged <- fusion_abdriged[,c(1:30,34,35,31,32,33)]
 fusion_abdriged_short_cols <- fusion_abdriged[, !names(fusion_abdriged) %in% c("FUSION_MODEL", "FUSION_CDS","FUSION_TRANSL")]
-fusion_abdriged_long_cols <- fusion_abdriged[, c("FUSION_MODEL", "FUSION_CDS","FUSION_TRANSL")]
+fusion_abdriged_long_cols <- fusion_abdriged[, c("X.FusionName", "FUSION_MODEL", "FUSION_CDS","FUSION_TRANSL")]
 
 datatable(fusion_abdriged_short_cols, rownames = F,  extensions = c('FixedColumns','Buttons'),
   options = list(
@@ -181,8 +183,7 @@ datatable(fusion_abdriged_short_cols, rownames = F,  extensions = c('FixedColumn
     fixedColumns = list(leftColumns = 1),
     dom = 'Bfrtip',
     buttons = c('copy', 'csv', 'excel'),
-    autoWidth = TRUE,
-    columnDefs = list(list(width = '300px', targets = c(31,32)))
+    autoWidth = TRUE
   )
 )
 
@@ -192,8 +193,7 @@ datatable(fusion_abdriged_long_cols, rownames = F,  extensions = c('FixedColumns
     fixedColumns = list(leftColumns = 1),
     dom = 'Bfrtip',
     buttons = c('copy', 'csv', 'excel'),
-    autoWidth = TRUE,
-    columnDefs = list(list(width = '300px', targets = c(31,32)))
+    autoWidth = TRUE
   )
 )
 ```
@@ -203,8 +203,8 @@ datatable(fusion_abdriged_long_cols, rownames = F,  extensions = c('FixedColumns
 
 
 ```{r Exons table}
+try({
 mane <- read.csv(params$mane, sep = "\t")
-fusion_abdriged <- read.csv(params$fusionsabridgedcoding, sep = "\t")
 fusion_abdriged <- fusion_abdriged[,c(1:30,34,35,31,32,33)]
 
 ref_annot <- read.delim(params$ref_annot, sep = "\t", skip = 5, header = F)
@@ -213,7 +213,7 @@ colnames(ref_annot) <- c("chr", "source", "feature", "start", "end", "score", "s
 ref_annot_exons <- ref_annot[which(ref_annot$feature == "exon"), ]
 
 # get the genes names to filter the ref annotation to genes of interest
-genes <- unlist(strsplit(fusion_abdriged$X.FusionName, "--"))
+genes <- unlist(strsplit(fusion_abdriged$X.FusionName, "::"))
 ref_annot_df <- as.data.frame(matrix(NA, ncol = ncol(ref_annot_exons), nrow = 0))
 colnames(ref_annot_df) <- colnames(ref_annot_exons)
 
@@ -278,6 +278,8 @@ datatable(df2, rownames = F,  extensions = c('FixedColumns','Buttons'),
     buttons = c('copy', 'csv', 'excel')
   )
 )
+
+})
 ```
 
 ### 2.3 Fusion Prediction Annotation
@@ -287,12 +289,15 @@ The table below lists all the chimerDB fusion annotation for the predicted fusio
 Please keep in mind that the annotation for chimerDB is build 37.  
 
 ```{r}
-fusion_abdriged_annotation <- read.csv(params$fusionsabridgedcoding, sep = "\t")
+try({
+fusion_abdriged_annotation <- fusion_abdriged
 fusion_abdriged_annotation <- fusion_abdriged_annotation[,c(1:5)]
-genes <- unlist(strsplit(fusion_abdriged_annotation[,1], "--"))
+genes <- unlist(strsplit(fusion_abdriged_annotation$X.FusionName, "::"))
+})
 ```
 
 ```{r chimerkb}
+try({
 chimerkb <- read_excel(params$chimerkb)
 gene_nice <- gsub("--", "-", fusion_abdriged_annotation[,1])
 chimerkb_sample_fusions <- chimerkb[which(chimerkb$Fusion_pair %in% gene_nice),]
@@ -303,6 +308,7 @@ datatable(chimerkb_sample_fusions, rownames = F,  extensions = c('FixedColumns',
     buttons = c('copy', 'csv', 'excel')
   )
 )
+})
 ```
 
 The table below lists URL links to different annotation databases. These are:
@@ -313,66 +319,67 @@ The table below lists URL links to different annotation databases. These are:
 
 
 ```{r url_links}
-fusion_abdriged_annotation$gene_fusion1 <- genes[seq_along(genes) %% 2 > 0]
-fusion_abdriged_annotation$gene_fusion2 <- genes[seq_along(genes) %% 2 == 0]
-
-
-make_hyperlink = function(myurl,mytext=myurl) {
-  paste('<a href="',myurl,'">',mytext,'</a>')
-}
-
-mega_fusion_html <-read_html(params$cosmic_fusions)
-my_df <- as.data.frame(mega_fusion_html %>% html_table(fill=TRUE))
-links <- mega_fusion_html %>% html_nodes("a") %>% html_attr("href")
-links_fusions <- grep("https://cancer.sanger.ac.uk/cosmic/fusion/overview?", links, value = TRUE) 
-my_df$links_fusions <- links_fusions
-
-for (i in 1:nrow(my_df)) {
-  fusion <- my_df[i,1]
-  if (grepl("ENST",fusion, fixed = TRUE)) {
-    genes_vector <- str_split_1(fusion, "-")
-    my_df[i,"gene_fusion"] <- paste(gsub("_.*","",genes_vector[1]), gsub("_.*","",genes_vector[2]), sep = "-")
-  } else {
-    my_df[i,"gene_fusion"] <- fusion
+try({
+  fusion_abdriged_annotation$gene_fusion1 <- genes[seq_along(genes) %% 2 > 0]
+  fusion_abdriged_annotation$gene_fusion2 <- genes[seq_along(genes) %% 2 == 0]
+  
+  
+  make_hyperlink = function(myurl,mytext=myurl) {
+    paste('<a href="',myurl,'">',mytext,'</a>')
   }
-}
-
-fusion_abdriged_annotation$gene_nice <- gsub("--", "-", fusion_abdriged_annotation[,1])
-filtered_my_df <- my_df[which(my_df$gene_fusion %in% fusion_abdriged_annotation$gene_nice),]
-fusion_abdriged_annotation$gene_fusion_cosmic <- ""
-fusion_abdriged_annotation$gene_fusion_cosmic <- filtered_my_df$links_fusions[match(fusion_abdriged_annotation$gene_nice, filtered_my_df$gene_fusion)]
-
-fusion_abdriged_annotation$gene_fusion1_oncokb <- c(paste("https://www.oncokb.org/gene/", fusion_abdriged_annotation$gene_fusion1, "/Fusions?refGenome=GRCh38" , sep = ""))
-fusion_abdriged_annotation$gene_fusion2_oncokb <- c(paste("https://www.oncokb.org/gene/", fusion_abdriged_annotation$gene_fusion2, "/Fusions?refGenome=GRCh38" , sep = ""))
-
-fusion_abdriged_annotation$gene_fusion1_CT <- c(paste("https://clinicaltrials.gov/search?term=", fusion_abdriged_annotation$gene_fusion1, "%20Fusion" , sep = ""))
-fusion_abdriged_annotation$gene_fusion2_CT <- c(paste("https://clinicaltrials.gov/search?term=", fusion_abdriged_annotation$gene_fusion2, "%20Fusion" , sep = ""))
-
-# rename column
-names(fusion_abdriged_annotation)[names(fusion_abdriged_annotation) == "X.FusionName"] <- "Fusion Pair"
-# drop column
-fusion_abdriged_annotation <- fusion_abdriged_annotation[,!names(fusion_abdriged_annotation) %in% c("gene_nice")]
-# remove NAs
-fusion_abdriged_annotation[is.na(fusion_abdriged_annotation)] <- ""
-fusion_abdriged_annotation_urls <- fusion_abdriged_annotation
-for (i in 1:nrow(fusion_abdriged_annotation_urls)) {
-  fusion_abdriged_annotation_urls[i, 'gene_fusion_cosmic'] <- make_hyperlink(fusion_abdriged_annotation_urls[i, 'gene_fusion_cosmic'], fusion_abdriged_annotation_urls[i, 'gene_fusion_cosmic'])
-  fusion_abdriged_annotation_urls[i, 'gene_fusion1_oncokb'] <- make_hyperlink(fusion_abdriged_annotation_urls[i, 'gene_fusion1_oncokb'], fusion_abdriged_annotation_urls[i, 'gene_fusion1_oncokb'])
-  fusion_abdriged_annotation_urls[i, 'gene_fusion2_oncokb'] <- make_hyperlink(fusion_abdriged_annotation_urls[i, 'gene_fusion2_oncokb'], fusion_abdriged_annotation_urls[i, 'gene_fusion2_oncokb'])
-  fusion_abdriged_annotation_urls[i, 'gene_fusion1_CT'] <- make_hyperlink(fusion_abdriged_annotation_urls[i, 'gene_fusion1_CT'], fusion_abdriged_annotation_urls[i, 'gene_fusion1_CT'])
-  fusion_abdriged_annotation_urls[i, 'gene_fusion2_CT'] <- make_hyperlink(fusion_abdriged_annotation_urls[i, 'gene_fusion2_CT'], fusion_abdriged_annotation_urls[i, 'gene_fusion2_CT'])
-}
-
-datatable(fusion_abdriged_annotation_urls, rownames = F, 
-  escape=FALSE, extensions = c('FixedColumns','Buttons'),
-  options = list(
-    scrollX = TRUE,
-    fixedColumns = list(leftColumns = 1),
-    dom = 'Bfrtip',
-    buttons = c('copy', 'csv', 'excel')
+  
+  mega_fusion_html <-read_html(params$cosmic_fusions)
+  my_df <- as.data.frame(mega_fusion_html %>% html_table(fill=TRUE))
+  links <- mega_fusion_html %>% html_nodes("a") %>% html_attr("href")
+  links_fusions <- grep("https://cancer.sanger.ac.uk/cosmic/fusion/overview?", links, value = TRUE) 
+  my_df$links_fusions <- links_fusions
+  
+  for (i in 1:nrow(my_df)) {
+    fusion <- my_df[i,1]
+    if (grepl("ENST",fusion, fixed = TRUE)) {
+      genes_vector <- str_split_1(fusion, "-")
+      my_df[i,"gene_fusion"] <- paste(gsub("_.*","",genes_vector[1]), gsub("_.*","",genes_vector[2]), sep = "-")
+    } else {
+      my_df[i,"gene_fusion"] <- fusion
+    }
+  }
+  
+  fusion_abdriged_annotation$gene_nice <- gsub("--", "-", fusion_abdriged_annotation[,1])
+  filtered_my_df <- my_df[which(my_df$gene_fusion %in% fusion_abdriged_annotation$gene_nice),]
+  fusion_abdriged_annotation$gene_fusion_cosmic <- ""
+  fusion_abdriged_annotation$gene_fusion_cosmic <- filtered_my_df$links_fusions[match(fusion_abdriged_annotation$gene_nice, filtered_my_df$gene_fusion)]
+  
+  fusion_abdriged_annotation$gene_fusion1_oncokb <- c(paste("https://www.oncokb.org/gene/", fusion_abdriged_annotation$gene_fusion1, "/Fusions?refGenome=GRCh38" , sep = ""))
+  fusion_abdriged_annotation$gene_fusion2_oncokb <- c(paste("https://www.oncokb.org/gene/", fusion_abdriged_annotation$gene_fusion2, "/Fusions?refGenome=GRCh38" , sep = ""))
+  
+  fusion_abdriged_annotation$gene_fusion1_CT <- c(paste("https://clinicaltrials.gov/search?term=", fusion_abdriged_annotation$gene_fusion1, "%20Fusion" , sep = ""))
+  fusion_abdriged_annotation$gene_fusion2_CT <- c(paste("https://clinicaltrials.gov/search?term=", fusion_abdriged_annotation$gene_fusion2, "%20Fusion" , sep = ""))
+  
+  # rename column
+  names(fusion_abdriged_annotation)[names(fusion_abdriged_annotation) == "X.FusionName"] <- "Fusion Pair"
+  # drop column
+  fusion_abdriged_annotation <- fusion_abdriged_annotation[,!names(fusion_abdriged_annotation) %in% c("gene_nice")]
+  # remove NAs
+  fusion_abdriged_annotation[is.na(fusion_abdriged_annotation)] <- ""
+  fusion_abdriged_annotation_urls <- fusion_abdriged_annotation
+  for (i in 1:nrow(fusion_abdriged_annotation_urls)) {
+    fusion_abdriged_annotation_urls[i, 'gene_fusion_cosmic'] <- make_hyperlink(fusion_abdriged_annotation_urls[i, 'gene_fusion_cosmic'], fusion_abdriged_annotation_urls[i, 'gene_fusion_cosmic'])
+    fusion_abdriged_annotation_urls[i, 'gene_fusion1_oncokb'] <- make_hyperlink(fusion_abdriged_annotation_urls[i, 'gene_fusion1_oncokb'], fusion_abdriged_annotation_urls[i, 'gene_fusion1_oncokb'])
+    fusion_abdriged_annotation_urls[i, 'gene_fusion2_oncokb'] <- make_hyperlink(fusion_abdriged_annotation_urls[i, 'gene_fusion2_oncokb'], fusion_abdriged_annotation_urls[i, 'gene_fusion2_oncokb'])
+    fusion_abdriged_annotation_urls[i, 'gene_fusion1_CT'] <- make_hyperlink(fusion_abdriged_annotation_urls[i, 'gene_fusion1_CT'], fusion_abdriged_annotation_urls[i, 'gene_fusion1_CT'])
+    fusion_abdriged_annotation_urls[i, 'gene_fusion2_CT'] <- make_hyperlink(fusion_abdriged_annotation_urls[i, 'gene_fusion2_CT'], fusion_abdriged_annotation_urls[i, 'gene_fusion2_CT'])
+  }
+  
+  datatable(fusion_abdriged_annotation_urls, rownames = F, 
+            escape=FALSE, extensions = c('FixedColumns','Buttons'),
+            options = list(
+              scrollX = TRUE,
+              fixedColumns = list(leftColumns = 1),
+              dom = 'Bfrtip',
+              buttons = c('copy', 'csv', 'excel')
+            )
   )
-)
-
+})
 
 ```
 
@@ -421,6 +428,8 @@ for(i in plots){
   cat(sprintf(paste("\n#### ", tab_name, "\n![](%s)\n", sep = ""), i))
 }
 ```
+
+
 ## 3. RNA Coverage 
 
 ### 3.1 Coverage by Gene
@@ -443,26 +452,40 @@ max_gene <-  rnaseqc_coverage_hgnc[order(rnaseqc_coverage_hgnc$coverage_mean, de
 
 
 ```{r}
-genes <- genes <- unlist(strsplit(fusion_abdriged$X.FusionName, "::"))
-rnaseqc_coverage_hgnc_fusions <- rnaseqc_coverage_hgnc[which(rnaseqc_coverage_hgnc$hgnc_symbol %in% genes),]
+if (!is.null(fusion_abdriged$X.FusionName)){
+  genes <- unlist(strsplit(fusion_abdriged$X.FusionName, "--"))
+  rnaseqc_coverage_hgnc_fusions <- rnaseqc_coverage_hgnc[which(rnaseqc_coverage_hgnc$hgnc_symbol %in% genes),]
 
-
-rnaseqc_coverage_hgnc %>%
-  ggplot(aes(rnaseqc_coverage_hgnc$coverage_mean)) +
-  geom_boxplot() +
-  geom_dotplot(data = rnaseqc_coverage_hgnc_fusions,
-               aes(rnaseqc_coverage_hgnc_fusions$coverage_mean),binaxis='x',
-               stackdir='center',dotsize=0.5,color='red') +
-  theme(
-         panel.background = element_rect(fill='transparent'),
-         plot.background = element_rect(fill='transparent', color=NA),
-         panel.grid.major = element_blank(),
-         panel.grid.minor = element_blank(),
-         legend.background = element_rect(fill='transparent'),
-         legend.box.background = element_rect(fill='transparent')
-       ) +
-  labs(x = "Mean Coverage", title = "All genes")
-```
+  rnaseqc_coverage_hgnc %>%
+    ggplot(aes(rnaseqc_coverage_hgnc$coverage_mean)) +
+    geom_boxplot() +
+    geom_dotplot(data = rnaseqc_coverage_hgnc_fusions,
+                 aes(rnaseqc_coverage_hgnc_fusions$coverage_mean),binaxis='x',
+                 stackdir='center',dotsize=0.5,color='red') +
+    theme(
+      panel.background = element_rect(fill='transparent'),
+      plot.background = element_rect(fill='transparent', color=NA),
+      panel.grid.major = element_blank(),
+      panel.grid.minor = element_blank(),
+      legend.background = element_rect(fill='transparent'),
+      legend.box.background = element_rect(fill='transparent')
+    ) +
+    labs(x = "Mean Coverage", title = "All genes")
+} else {
+    rnaseqc_coverage_hgnc %>%
+    ggplot(aes(rnaseqc_coverage_hgnc$coverage_mean)) +
+    geom_boxplot() +
+    theme(
+      panel.background = element_rect(fill='transparent'),
+      plot.background = element_rect(fill='transparent', color=NA),
+      panel.grid.major = element_blank(),
+      panel.grid.minor = element_blank(),
+      legend.background = element_rect(fill='transparent'),
+      legend.box.background = element_rect(fill='transparent')
+    ) +
+    labs(x = "Mean Coverage", title = "All genes")
+}
+``` 
 
 ```{r}
 datatable(rnaseqc_coverage_hgnc, rownames = F, 
@@ -479,27 +502,29 @@ datatable(rnaseqc_coverage_hgnc, rownames = F,
 
 ### 3.2 Coverage by Exon
 
-```{r econ_coverage}
-rnaseqc_exons <- read.csv(params$qcexonscov, sep = "\t")
-rnaseqc_exons <- separate(data = rnaseqc_exons, col = Exon.ID, into = c("Gene_ID", "Exon"), sep = "_")
-# get the genes on the capture
-rnaseqc_exonse_hgnc <- rnaseqc_exons[which(rnaseqc_exons$Gene_ID %in% rnaseqc_coverage_hgnc$ENSG_id),]
-rnaseqc_exonse_hgnc$hgnc_symbol <- rnaseqc_coverage_hgnc$hgnc_symbol[match(rnaseqc_exonse_hgnc$Gene_ID, rnaseqc_coverage_hgnc$ENSG_id)]
-rnaseqc_exonse_hgnc$hgnc_id<- rnaseqc_coverage_hgnc$hgnc_id[match(rnaseqc_exonse_hgnc$Gene_ID, rnaseqc_coverage_hgnc$ENSG_id)]
-rnaseqc_exonse_hgnc <- rnaseqc_exonse_hgnc[,c("hgnc_symbol", "hgnc_id", "Gene_ID", "Exon", "Exon.CV")]
+```{r exon_coverage}
+try({
+  rnaseqc_exons <- read.csv(params$qcexonscov, sep = "\t")
+  rnaseqc_exons <- separate(data = rnaseqc_exons, col = Exon.ID, into = c("Gene_ID", "Exon"), sep = "_")
+  # get the genes on the capture
+  rnaseqc_exonse_hgnc <- rnaseqc_exons[which(rnaseqc_exons$Gene_ID %in% rnaseqc_coverage_hgnc$ENSG_id),]
+  rnaseqc_exonse_hgnc$hgnc_symbol <- rnaseqc_coverage_hgnc$hgnc_symbol[match(rnaseqc_exonse_hgnc$Gene_ID, rnaseqc_coverage_hgnc$ENSG_id)]
+  rnaseqc_exonse_hgnc$hgnc_id<- rnaseqc_coverage_hgnc$hgnc_id[match(rnaseqc_exonse_hgnc$Gene_ID, rnaseqc_coverage_hgnc$ENSG_id)]
+  rnaseqc_exonse_hgnc <- rnaseqc_exonse_hgnc[,c("hgnc_symbol", "hgnc_id", "Gene_ID", "Exon", "Exon.CV")]
+  
+  datatable(rnaseqc_exonse_hgnc, rownames = F, 
+            escape=FALSE, extensions = c('FixedColumns','Buttons'),
+            options = list(
+              scrollX = TRUE,
+              fixedColumns = list(leftColumns = 1),
+              dom = 'Bfrtip',
+              buttons = c('copy', 'csv', 'excel')
+            )
+  )
+})
 ```
 
-```{r}
-datatable(rnaseqc_exonse_hgnc, rownames = F, 
-  escape=FALSE, extensions = c('FixedColumns','Buttons'),
-  options = list(
-    scrollX = TRUE,
-    fixedColumns = list(leftColumns = 1),
-    dom = 'Bfrtip',
-    buttons = c('copy', 'csv', 'excel')
-  )
-)
-```
+
 
 
 ## 4. Session Info
