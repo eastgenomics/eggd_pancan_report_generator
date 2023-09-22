@@ -54,9 +54,15 @@ fusion_abdriged$X.FusionName <- gsub("--", "::",fusion_abdriged$X.FusionName)
 
 ### 1.1 Sample Meta Data
 ```{r 4-present_metadata}
-target_list <- gsub("-", "::",params$targetlist)
+# input is fusions comma seperated
+target_list <-  unlist(strsplit(params$targetlist, ","))
+# convert to correct format
+target_list <- gsub("-", "::", target_list)
+# remove any white space
+target_list <- trimws(target_list) 
 predicted_fusions <- unique(fusion_abdriged$X.FusionName)
 TP_fusions <- intersect(target_list, predicted_fusions)
+TP_fusions <- paste0(TP_fusions, collapse = ", ")
 if (length(TP_fusions) == 0){
   TP_fusions <- NA
 }
