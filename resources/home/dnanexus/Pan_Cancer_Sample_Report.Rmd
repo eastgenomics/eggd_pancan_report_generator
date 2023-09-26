@@ -403,19 +403,55 @@ try({
 
 ```{r 12-chimeraviz_plot_generation, results="asis"}
 try({
-  for (f in 1:nrow(fusion_abdriged)) {
-    cmd = paste("Rscript chimeraviz.R", params$ensbsqlite, params$bam, params$fusionsabridgedcoding, f)
-    system(cmd)
+  rnaseqc_coverage <- read.csv(params$qcgenecov, sep = "\t")
+  genes <- unlist(strsplit(fusion_abdriged$X.FusionName, "::"))
+  fusions <- fusion_abdriged$X.FusionName
+
+  cov_table <- as.data.frame(matrix(NA, ncol = 4, nrow = 0))
+  for (i in 1:length(fusions)){
+    f = fusions[i]
+    genes <- unlist(strsplit(f, "::"))
+    cov_table[i,1] <- f
+    for (g in genes){
+      total_fusion_depth = sum(rnaseqc_coverage[which(rnaseqc_coverage$hgnc_symbol %in% genes),"coverage_mean"])
+      cov_table[i,2] <- total_fusion_depth
+    }
+    if (cov_table[i,2] > 10000) {
+      cov_table[i,3] <- as.logical("TRUE")
+      cov_table[i,4] <- (1/((cov_table[i,2] / 1000)))*2
+      # we do the mean coverage divided by 1,000 as that is the difference in SF
+      # we need it in fraction so we do 1/SF to get the value to put into the samtools
+      # we times it by two because we assume half the reads are from both genes
+    }
   }
-  
+  colnames(cov_table) <- c("fusion","combined_mean_coverage","downsample","downsample_fraction")
+  for (i in 1:nrow(cov_table)) {
+    fusion <- cov_table[i, "fusion"]
+    ## Downsample then plot if needed, if not plot straight away
+    if (isTRUE(cov_table[i,"downsample"])){
+      bam_filename <- paste("downsampled_",fusion ,".bam", sep = "")
+      dsf <- cov_table[i,"downsample_fraction"]
+      # downsample
+      cmd = paste("samtools view -b -s ", dsf, params$bam, "> ", bam_filename)
+      system(cmd)
+      cmd = paste("samtools index -b ", bam_filename)
+      system(cmd)
+      # plot
+      cmd = paste("Rscript chimeraviz.R", params$ensbsqlite, bam_filename, params$fusionsabridgedcoding, i)
+      system(cmd)
+    } else {
+      cmd = paste("Rscript chimeraviz.R", params$ensbsqlite, params$bam, params$fusionsabridgedcoding, i)
+      system(cmd)
+    }
+  }
+
   plots <- list.files(pattern = "*.png")
-  
+
   for(i in plots){
     filename <- file.path(i)
     tab_name <- gsub("_.*","",filename)
     cat(sprintf(paste("\n#### ", tab_name, "\n![](%s)\n", sep = ""), i))
   }
-  
 })
 ```
 
