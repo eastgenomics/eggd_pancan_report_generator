@@ -19,6 +19,7 @@ params:
   age:
   tumourtype:
   cosmic_fusions:
+  chimeraviz_limit:
 output:
   html_document:
     code_folding: hide
@@ -416,12 +417,16 @@ try({
       total_fusion_depth = sum(rnaseqc_coverage[which(rnaseqc_coverage$hgnc_symbol %in% genes),"coverage_mean"])
       cov_table[i,2] <- total_fusion_depth
     }
-    if (cov_table[i,2] > 10000) {
+    if (cov_table[i,2] > params$chimeraviz_limit) {
       cov_table[i,3] <- as.logical("TRUE")
       cov_table[i,4] <- (1/((cov_table[i,2] / 1000)))*2
-      # we do the mean coverage divided by 1,000 as that is the difference in SF
-      # we need it in fraction so we do 1/SF to get the value to put into the samtools
-      # we times it by two because we assume half the reads are from both genes
+      # we do the mean coverage divided by 1,000 as that is the difference in
+      # scale factor (SF) between the fusion coverage and how much coverage chimeraviz
+      # can handle before failing to plot.
+      # This scale factor needs to be a porportion of 1, so we do
+      # do 1/SF to get the value to put into the samtools.
+      # This value is multiplied by two as we did the sum of both genes (line 417)
+      # or else we are downsampling too much are from both genes
     }
   }
   colnames(cov_table) <- c("fusion","combined_mean_coverage","downsample","downsample_fraction")
