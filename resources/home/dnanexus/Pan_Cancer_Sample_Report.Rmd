@@ -481,35 +481,28 @@ rnaseqc_coverage_hgnc <- rnaseqc_coverage[which(rnaseqc_coverage$hgnc_symbol %in
 if (!is.null(fusion_abdriged$X.FusionName)){
   genes <- unlist(strsplit(fusion_abdriged$X.FusionName, "--"))
   rnaseqc_coverage_hgnc_fusions <- rnaseqc_coverage_hgnc[which(rnaseqc_coverage_hgnc$hgnc_symbol %in% genes),]
-
-  rnaseqc_coverage_hgnc %>%
-    ggplot(aes(rnaseqc_coverage_hgnc$coverage_mean)) +
-    geom_boxplot() +
-    geom_dotplot(data = rnaseqc_coverage_hgnc_fusions,
-                 aes(rnaseqc_coverage_hgnc_fusions$coverage_mean),binaxis='x',
-                 stackdir='center',dotsize=0.5,color='red') +
-    theme(
-      panel.background = element_rect(fill='transparent'),
-      plot.background = element_rect(fill='transparent', color=NA),
-      panel.grid.major = element_blank(),
-      panel.grid.minor = element_blank(),
-      legend.background = element_rect(fill='transparent'),
-      legend.box.background = element_rect(fill='transparent')
-    ) +
-    labs(x = "Mean Coverage", title = "All genes")
+  
+ p = rnaseqc_coverage_hgnc %>%
+    ggplot() +
+    geom_violin(aes(y = coverage_mean,x=""), fill='NA', alpha = .5)+
+    geom_boxplot(aes(y = coverage_mean,x=""), width=0.1) + 
+    geom_point(aes(y = coverage_mean, x="", text=sprintf("gene: %s<br>",  hgnc_symbol))) +
+    geom_point(data = rnaseqc_coverage_hgnc_fusions, 
+               aes(y = coverage_mean, x="", text=sprintf("gene: %s<br>",  hgnc_symbol)), color='red') +
+    theme_minimal()+
+    labs(x = "Mean Coverage", title = "Mean coverage of RNA genes (red are genes in a fusion)")+
+    coord_flip()
+ ggplotly(p)
 } else {
-    rnaseqc_coverage_hgnc %>%
-    ggplot(aes(rnaseqc_coverage_hgnc$coverage_mean)) +
-    geom_boxplot() +
-    theme(
-      panel.background = element_rect(fill='transparent'),
-      plot.background = element_rect(fill='transparent', color=NA),
-      panel.grid.major = element_blank(),
-      panel.grid.minor = element_blank(),
-      legend.background = element_rect(fill='transparent'),
-      legend.box.background = element_rect(fill='transparent')
-    ) +
-    labs(x = "Mean Coverage", title = "All genes")
+  p = rnaseqc_coverage_hgnc %>%
+    ggplot(aes(y=coverage_mean, x="")) +
+    geom_boxplot(width=0.1) + 
+    geom_violin(fill='NA', alpha = .5)+
+    geom_point(aes(y=coverage_mean, x="", text=sprintf("gene: %s<br>",  hgnc_symbol))) +
+    theme_minimal()+
+    labs(x = "Mean Coverage", title = "Mean coverage of RNA genes") +
+    coord_flip()
+  ggplotly(p)
 }
 
 datatable(rnaseqc_coverage_hgnc, rownames = F, 
