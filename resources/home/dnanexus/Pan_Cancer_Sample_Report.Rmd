@@ -480,7 +480,7 @@ capture_genes <- read.csv(params$capturegenes, header = F)
 rnaseqc_coverage_hgnc <- rnaseqc_coverage[which(rnaseqc_coverage$hgnc_symbol %in% capture_genes$V1),]
          
 if (!is.null(fusion_abdriged$X.FusionName)){
-  genes <- unlist(strsplit(fusion_abdriged$X.FusionName, "--"))
+  genes <- unlist(strsplit(fusion_abdriged$X.FusionName, "::"))
   rnaseqc_coverage_hgnc_fusions <- rnaseqc_coverage_hgnc[which(rnaseqc_coverage_hgnc$hgnc_symbol %in% genes),]
   
  p = rnaseqc_coverage_hgnc %>%
