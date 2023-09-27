@@ -44,6 +44,7 @@ library(xml2)
 library(tidyr)
 library(rvest)
 library(stringr)
+library(plotly)
 ```
 
 ## 1. Sample Info
@@ -490,7 +491,7 @@ if (!is.null(fusion_abdriged$X.FusionName)){
     geom_point(data = rnaseqc_coverage_hgnc_fusions, 
                aes(y = coverage_mean, x="", text=sprintf("gene: %s<br>",  hgnc_symbol)), color='red') +
     theme_minimal()+
-    labs(x = "Mean Coverage", title = "Mean coverage of RNA genes (red are genes in a fusion)")+
+    labs(x = "Mean Coverage", title = "Mean coverage of RNA genes")+
     coord_flip()
  ggplotly(p)
 } else {
