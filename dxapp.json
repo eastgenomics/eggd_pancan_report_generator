@@ -135,6 +135,12 @@
         "*.html"
       ],
       "help": ""
+    },
+    {
+      "name": "chimeraviz_limit",
+      "class": "string",
+      "optional": true,
+      "help": ""
     }
   ],
   "outputSpec": [

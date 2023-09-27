@@ -52,6 +52,7 @@ main() {
     mane = '$MANE_name', \
     chimerkb='$chimerkb_name', \
     age = '$age', tumourtype = '$tumour_type', \
+    chimeraviz_limit='$chimeraviz_limit', 
     cosmic_fusions='$cosmic_fusions_name'))\"" > cmd.sh
 
 
