@@ -101,11 +101,11 @@
       "help": ""
     },
     {
-      "name": "ref_annot",
+      "name": "CTAT_bundle",
       "class": "file",
       "optional": false,
       "patterns": [
-        "*.gtf"
+        "*.tar.gz"
       ],
       "help": ""
     },

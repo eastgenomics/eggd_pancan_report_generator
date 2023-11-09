@@ -32,6 +32,11 @@ main() {
 
     samtools index -b ${bam_prefix}.nochr.bam
 
+    ## load the CTAT and get the gtf
+    tar zxvf ${CTAT_bundle_path##*/}
+    lib_dir=$(echo $CTAT_bundle_name |  cut -d "." -f 1,2)
+    ref_annot_gtf="/home/dnanexus/${lib_dir}/ctat_genome_lib_build_dir/ref_annot.gtf"
+
     docker load -i $chimerviz_docker_name
     # Get image id from docker image loaded
     CHI_IMAGE_ID=$(sudo docker images --format="{{.Repository}} {{.ID}}" | grep "^sample_report" | cut -d' ' -f2)
@@ -48,7 +53,7 @@ main() {
     samplename = '$bam_prefix', \
     sexphenotype = '$sex_phenotype', \
     targetlist = '$target_list', \
-    ref_annot = '$ref_annot_name', \
+    ref_annot = '$ref_annot_gtf', \
     mane = '$MANE_name', \
     chimerkb='$chimerkb_name', \
     age = '$age', tumourtype = '$tumour_type', \
