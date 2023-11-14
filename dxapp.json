@@ -77,12 +77,69 @@
       "help": ""
     },
     {
-      "name": "rmarkdown",
+      "name": "age",
+      "class": "string",
+      "optional": true,
+      "help": ""
+    },
+    {
+      "name": "tumour_type",
+      "class": "string",
+      "optional": true,
+      "help": ""
+    },
+    {
+      "name": "target_list",
+      "class": "string",
+      "optional": true,
+      "help": ""
+    },
+    {
+      "name": "sex_phenotype",
+      "class": "string",
+      "optional": true,
+      "help": ""
+    },
+    {
+      "name": "CTAT_bundle",
       "class": "file",
       "optional": false,
       "patterns": [
-        "*.Rmd"
+        "*.tar.gz"
       ],
+      "help": ""
+    },
+    {
+      "name": "MANE",
+      "class": "file",
+      "optional": false,
+      "patterns": [
+        "*.txt"
+      ],
+      "help": ""
+    },
+    {
+      "name": "chimerkb",
+      "class": "file",
+      "optional": false,
+      "patterns": [
+        "*.xlsx"
+      ],
+      "help": ""
+    },
+    {
+      "name": "cosmic_fusions",
+      "class": "file",
+      "optional": false,
+      "patterns": [
+        "*.html"
+      ],
+      "help": ""
+    },
+    {
+      "name": "chimeraviz_limit",
+      "class": "string",
+      "optional": true,
       "help": ""
     }
   ],
