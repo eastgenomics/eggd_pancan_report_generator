@@ -77,6 +77,30 @@
       "help": ""
     },
     {
+      "name": "age",
+      "class": "string",
+      "optional": true,
+      "help": ""
+    },
+    {
+      "name": "tumour_type",
+      "class": "string",
+      "optional": true,
+      "help": ""
+    },
+    {
+      "name": "target_list",
+      "class": "string",
+      "optional": true,
+      "help": ""
+    },
+    {
+      "name": "sex_phenotype",
+      "class": "string",
+      "optional": true,
+      "help": ""
+    },
+    {
       "name": "CTAT_bundle",
       "class": "file",
       "optional": false,
