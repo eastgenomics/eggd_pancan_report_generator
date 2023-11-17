@@ -51,12 +51,9 @@ main() {
     ensbsqlite = '$ensdb_sqlite_name', \
     bam = '${bam_prefix}.nochr.bam', \
     samplename = '$bam_prefix', \
-    sexphenotype = '$sex_phenotype', \
-    targetlist = '$target_list', \
     ref_annot = '$ref_annot_gtf', \
     mane = '$MANE_name', \
     chimerkb='$chimerkb_name', \
-    age = '$age', tumourtype = '$tumour_type', \
     chimeraviz_limit='$chimeraviz_limit', 
     cosmic_fusions='$cosmic_fusions_name'))\"" > cmd.sh
 
