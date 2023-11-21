@@ -255,8 +255,39 @@ df_fusion_annot <- df_fusion_annot[,!(names(df_fusion_annot) %in% c("chr", "pos"
 df2 <- df_fusion_annot %>% left_join( tmp, 
            by=c('gene_name'))
 
+#### Get the mane info from the GTF
+# filter the reference annotation file to ensembl source and exons only
+ref_annot_txs <- ref_annot[which(ref_annot$feature == "transcript"), ]
+transcript_attributes <- c("gene_id", "transcript_id", "gene_type", "gene_name",
+                           "transcript_type", "transcript_name", "level_number", "protein_id",
+                           "transcript_support", "hgnc_id", "tag",
+                           "tag_2")
 
-df2$MANE_Status <- mane$MANE_status[match(df2$transcript_id, mane$Ensembl_nuc)]
+ref_annot_txs_mane_df <- separate(data = ref_annot_txs, col = attribute, into = transcript_attributes,  sep = ";")
+# the dataframe has MANE_Select in any colum so lets filter the dataframe to 
+# keep rows where MANE_Select exists
+ref_annot_txs_mane_df = ref_annot_txs_mane_df %>% filter_all(any_vars(. %in% " tag MANE_Select"))
+# keep the values - remove the header in element
+for(i in 1:ncol(ref_annot_txs_mane_df)){
+  ref_annot_txs_mane_df[,i] <- sub(".+? ", "", ref_annot_txs_mane_df[,i])
+}
+## some MANE Select is not in the tag_2 column, so if it is elsewhere move it
+## we expect the mane_select is in the 20th column
+ref_annot_txs_mane_df$tag_mane <- rep(NA, nrow(ref_annot_txs_mane_df)) 
+for(i in 1:nrow(ref_annot_txs_mane_df)){
+  # check that the MANE tag is in the tag_2
+  if(ref_annot_txs_mane_df[i,"tag_2"] == "MANE_Select"){
+    # if it is, then populate that info in tag_mane column
+    ref_annot_txs_mane_df[i,"tag_mane"] = ref_annot_txs_mane_df[i,"tag_2"]
+  } else {
+    # if not then it is likely in the tag column, then populate that info in tag_mane column
+    ref_annot_txs_mane_df[i,"tag_mane"] = ref_annot_txs_mane_df[i,"tag"]
+  }
+}
+
+
+
+df2$MANE_Status <- ref_annot_txs_mane_df$tag_mane[match(df2$transcript_id, ref_annot_txs_mane_df$transcript_id)]
 
 datatable(df2, rownames = F,  extensions = c('FixedColumns','Buttons'),
   options = list(
