@@ -52,7 +52,6 @@ main() {
     bam = '${bam_prefix}.nochr.bam', \
     samplename = '$bam_prefix', \
     ref_annot = '$ref_annot_gtf', \
-    mane = '$MANE_name', \
     chimerkb='$chimerkb_name', \
     chimeraviz_limit='$chimeraviz_limit', 
     cosmic_fusions='$cosmic_fusions_name'))\"" > cmd.sh
