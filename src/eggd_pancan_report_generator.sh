@@ -35,7 +35,7 @@ main() {
     ## load the CTAT and get the gtf
     tar zxvf ${CTAT_bundle_path##*/}
     lib_dir=$(echo $CTAT_bundle_name |  cut -d "." -f 1,2)
-    ref_annot_gtf="/home/dnanexus/${lib_dir}/ctat_genome_lib_build_dir/ref_annot.gtf"
+    ref_annot_gtf="${lib_dir}/ctat_genome_lib_build_dir/ref_annot.gtf"
 
     docker load -i $chimerviz_docker_name
     # Get image id from docker image loaded

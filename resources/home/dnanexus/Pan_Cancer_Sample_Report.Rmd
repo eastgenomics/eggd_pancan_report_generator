@@ -226,7 +226,7 @@ tmp <- gsub("\\..*", "", df_breakpoints$LeftGene) # removes version
 df_breakpoints$LeftGene <- gsub(".*\\^", "", tmp) # remove gene symbol
 tmp <- gsub("\\..*", "", df_breakpoints$RightGene) # removes version
 df_breakpoints$RightGene <- gsub(".*\\^", "", tmp) # remove gene symbol
-df_breakpoints <- separate(data = df_breakpoints, col = X.FusionName, into = c("LeftGene","RightGene"),  sep = "--")
+df_breakpoints <- separate(data = df_breakpoints, col = X.FusionName, into = c("LeftGene","RightGene"),  sep = "::")
 
 df_fusion_annot <- as.data.frame(matrix(nrow=length(genes), ncol = 0))
 df_fusion_annot$gene_name <- as.character(rbind(df_breakpoints$LeftGene, df_breakpoints$RightGene))
