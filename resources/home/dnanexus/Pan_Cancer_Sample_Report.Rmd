@@ -12,7 +12,6 @@ params:
   bam:
   samplename:
   ref_annot:
-  mane:
   chimerkb:
   cosmic_fusions:
   chimeraviz_limit:
@@ -192,7 +191,6 @@ datatable(fusion_abdriged_long_cols, rownames = F,  extensions = c('FixedColumns
 
 ```{r 7-exons_table}
 try({
-mane <- read.csv(params$mane, sep = "\t")
 fusion_abdriged <- fusion_abdriged[,c(1:30,34,35,31,32,33)]
 
 ref_annot <- read.delim(params$ref_annot, sep = "\t", skip = 5, header = F)
