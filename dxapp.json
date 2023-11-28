@@ -86,15 +86,6 @@
       "help": ""
     },
     {
-      "name": "MANE",
-      "class": "file",
-      "optional": false,
-      "patterns": [
-        "*.txt"
-      ],
-      "help": ""
-    },
-    {
       "name": "chimerkb",
       "class": "file",
       "optional": false,
