@@ -1,7 +1,7 @@
 # pancancer_sample_report
 
 ## What does this app do?
-Generate aGenerate a html report containing fusion and QC information.
+Generate a html report containing fusion and QC information.
 
 ## What are typical use cases for this app?
 This app may be executed as a standalone app.
