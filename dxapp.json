@@ -1,0 +1,158 @@
+{
+  "name": "eggd_pancan_report_generator",
+  "title": "eggd_pancan_report_generator",
+  "summary": "eggd_pancan_report_generator",
+  "version": "1.0.0",
+  "inputSpec": [
+    {
+      "name": "bam",
+      "class": "file",
+      "optional": false,
+      "patterns": [
+        "*.bam"
+      ],
+      "help": ""
+    },
+    {
+      "name": "rnaseqc_metrics",
+      "class": "file",
+      "optional": false,
+      "patterns": [
+        "*.metrics.tsv"
+      ],
+      "help": ""
+    },
+    {
+      "name": "rnaseqc_coverage",
+      "class": "file",
+      "optional": false,
+      "patterns": [
+        "*.coverage.hgnc.tsv"
+      ],
+      "help": ""
+    },
+    {
+      "name": "rnaseqc_exon",
+      "class": "file",
+      "optional": false,
+      "patterns": [
+        "*.exon_cv.tsv"
+      ],
+      "help": ""
+    },
+    {
+      "name": "fusioninspector_abridged",
+      "class": "file",
+      "optional": false,
+      "patterns": [
+        "*.coding_effect"
+      ],
+      "help": ""
+    },
+    {
+      "name": "capture_bed",
+      "class": "file",
+      "optional": false,
+      "patterns": [
+        "*.csv"
+      ],
+      "help": ""
+    },
+    {
+      "name": "ensdb_sqlite",
+      "class": "file",
+      "optional": false,
+      "patterns": [
+        "*.sqlite"
+      ],
+      "help": ""
+    },
+    {
+      "name": "chimerviz_docker",
+      "class": "file",
+      "optional": false,
+      "patterns": [
+        "*.tar.gz"
+      ],
+      "help": ""
+    },
+    {
+      "name": "CTAT_bundle",
+      "class": "file",
+      "optional": false,
+      "patterns": [
+        "*.tar.gz"
+      ],
+      "help": ""
+    },
+    {
+      "name": "chimerkb",
+      "class": "file",
+      "optional": false,
+      "patterns": [
+        "*.xlsx"
+      ],
+      "help": ""
+    },
+    {
+      "name": "cosmic_fusions",
+      "class": "file",
+      "optional": false,
+      "patterns": [
+        "*.html"
+      ],
+      "help": ""
+    },
+    {
+      "name": "chimeraviz_limit",
+      "class": "string",
+      "optional": true,
+      "help": ""
+    }
+  ],
+  "outputSpec": [
+    {
+      "name": "html_report",
+      "class": "file",
+      "patterns": [
+        "*.html"
+      ],
+      "help": ""
+    }
+  ],
+  "runSpec": {
+    "timeoutPolicy": {
+      "*": {
+        "hours": 2
+      }
+    },
+    "assetDepends": [
+      {
+        "name": "htslib",
+        "project": "project-Fkb6Gkj433GVVvj73J7x8KbV",
+        "folder": "/app_assets/htslib/htslib_v1.15.0",
+        "version": "1.15.0"
+      }
+    ],
+    "interpreter": "bash",
+    "file": "src/eggd_pancan_report_generator.sh",
+    "distribution": "Ubuntu",
+    "release": "20.04",
+    "version": "0"
+  },
+  "access": {
+    "network": [
+      "*"
+    ],
+    "project": "CONTRIBUTE"
+  },
+  "regionalOptions": {
+    "aws:eu-central-1": {
+      "systemRequirements": {
+        "*": {
+          "instanceType": "mem1_ssd2_v2_x16"
+        }
+      }
+    }
+  }
+}
