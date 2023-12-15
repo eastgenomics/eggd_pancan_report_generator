@@ -415,7 +415,6 @@ try({
 ```{r 12-chimeraviz_plot_generation, results="asis"}
 try({
   rnaseqc_coverage <- read.csv(params$qcgenecov, sep = "\t")
-  genes <- unlist(strsplit(fusion_abdriged$X.FusionName, "::"))
   fusions <- fusion_abdriged$X.FusionName
 
   cov_table <- as.data.frame(matrix(NA, ncol = 4, nrow = 0))
