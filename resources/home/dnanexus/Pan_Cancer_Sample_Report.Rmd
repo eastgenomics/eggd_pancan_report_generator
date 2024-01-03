@@ -316,7 +316,7 @@ genes <- unlist(strsplit(fusion_abdriged_annotation$X.FusionName, "::"))
 ```{r 9-chimerkb}
 try({
 chimerkb <- read_excel(params$chimerkb)
-gene_nice <- gsub("--", "-", fusion_abdriged_annotation[,1])
+gene_nice <- gsub("::", "-", fusion_abdriged_annotation[,1])
 chimerkb_sample_fusions <- chimerkb[which(chimerkb$Fusion_pair %in% gene_nice),]
 datatable(chimerkb_sample_fusions, rownames = F,  extensions = c('FixedColumns','Buttons'),
   options = list(
