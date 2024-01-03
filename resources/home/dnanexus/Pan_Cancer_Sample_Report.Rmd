@@ -361,7 +361,7 @@ try({
     }
   }
   
-  fusion_abdriged_annotation$gene_nice <- gsub("--", "-", fusion_abdriged_annotation[,1])
+  fusion_abdriged_annotation$gene_nice <- gsub("::", "-", fusion_abdriged_annotation[,1])
   filtered_my_df <- my_df[which(my_df$gene_fusion %in% fusion_abdriged_annotation$gene_nice),]
   fusion_abdriged_annotation$gene_fusion_cosmic <- ""
   fusion_abdriged_annotation$gene_fusion_cosmic <- filtered_my_df$links_fusions[match(fusion_abdriged_annotation$gene_nice, filtered_my_df$gene_fusion)]
